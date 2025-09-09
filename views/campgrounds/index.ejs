@@ -6,6 +6,22 @@
     
     <ul>
         <% for(let campground of campgrounds){ %>
-            <li><a href="./campgrounds/<%= campground._id %>"><%= campground.location %></a></li>
+            <div class="card">
+                <div class="row">
+                    <div class="col-md-4">
+                        <img src="<%= campground.image  %>" alt="" class="img-fluid">
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            <h5 class="class-title"><%= campground.title %></h5>
+                            <p class="class-text"><%= campground.description %></p>
+                            <p class="class-text">
+                                <small class="text-muted"><%= campground.location %></small>
+                            </p>
+                            <a href="campgrounds/<%= campground._id %>" class="btn btn-primary">View <%= campground.title %></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <% } %>
     </ul>

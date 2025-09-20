@@ -22,9 +22,18 @@ const seedDB = async () => {
       author: '68ca513b1124428568a63cf2',
       location: `${cities[random1000].city},${cities[random1000].state}`,
       title: `${sample(descriptors)} ${sample(places)}`,
-      image: `https://picsum.photos/400?random=${Math.random()}`,
       description: "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Vitae rerum ipsa consectetur consequuntur ducimus, distinctio impedit officiis corrupti accusamus laboriosam asperiores alias fugiat ex porro, incidunt aliquid odio tempora deleniti.",
-      price : price
+      price : price,
+      images:[
+          {
+            url: 'https://res.cloudinary.com/dgqgzmzed/image/upload/v1758274628/YelpCamp/ztihhnd4typman05c4hm.jpg',
+        filename: 'YelpCamp/ztihhnd4typman05c4hm'
+          },
+          {
+            url: 'https://res.cloudinary.com/dgqgzmzed/image/upload/v1758275891/YelpCamp/os6makcwbz6sjpnb2ivx.jpg',
+        filename: 'YelpCamp/os6makcwbz6sjpnb2ivx'
+          }
+      ]
     })
     await camp.save();
   }
@@ -34,4 +43,3 @@ const seedDB = async () => {
 seedDB().then(() => {
   mongoose.connection.close();
 });
-

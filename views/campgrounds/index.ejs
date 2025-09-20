@@ -1,15 +1,16 @@
 <% layout('layouts/boilerplate') %>
     <h1>All campground</h1>
-<div>
-    <a href="/campgrounds/new">Add campground</a>
-</div>
     
     <ul>
         <% for(let campground of campgrounds){ %>
             <div class="card">
                 <div class="row">
                     <div class="col-md-4">
-                        <img src="<%= campground.image  %>" alt="" class="img-fluid">
+                        <% if(campground.images.length) { %>
+                        <img src="<%= campground.images[0].image  %>" alt="" class="img-fluid">
+                        <% }else{ %>
+                            <img src="https://res.cloudinary.com/dgqgzmzed/image/upload/v1758274628/YelpCamp/ztihhnd4typman05c4hm.jpg" alt="" class="img-fluid">
+                            <% } %>
                     </div>
                     <div class="col-md-8">
                         <div class="card-body">

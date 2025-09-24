@@ -1,6 +1,7 @@
-if (process.env.NODE_ENV !== "production"){
-    require('dotenv').config();
-}
+ if (process.env.NODE_ENV !== "production"){
+     require('dotenv').config();
+ }
+
 
 const express = require('express');
 const path = require('path');
@@ -13,10 +14,13 @@ const methodOverride = require('method-override');
 const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const User = require('./models/user');
+const sanitizeV5 = require('./utils/mongoSanitizeV5.js');
+const helmet = require('helmet');
 
 const userRoutes = require('./routes/users');
 const campgroundRoutes = require('./routes/campgrounds');
 const reviewRoutes = require('./routes/reviews');
+const { name } = require('ejs');
 
 mongoose.connect('mongodb://localhost:27017/yelp-camp');
 
@@ -31,24 +35,74 @@ app.engine('ejs', ejsMate);
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+app.set('query parser', 'extended');
 
 app.use(express.urlencoded({ extended: true }))  // parse data from form and give to req.body
 app.use(methodOverride('_method'));
 app.use(express.static(path.join(__dirname, 'public')))
+app.use(sanitizeV5({ replaceWith: '_' }));
 
 const sessionConfig = {
+    name: 'session',
     secret: 'thisshouldbeabettersecret!',
     resave: false,
     saveUninitialized: true,
     cookie: {
         httpOnly: true,
+        // secure: true,
         expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
         maxAge: 1000 * 60 * 60 * 24 * 7
     },
     }
 
-app.use(session(sessionConfig))
+app.use(session(sessionConfig));
 app.use(flash());
+app.use(
+    helmet.contentSecurityPolicy({
+        directives: {
+            defaultSrc: [],
+            connectSrc: [
+                "'self'",
+                "https://api.maptiler.com",
+                "https://cdn.jsdelivr.net"
+            ],
+            scriptSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                "https://cdn.maptiler.com",
+                "https://cdn.jsdelivr.net",
+                "https://kit.fontawesome.com/",
+                "https://cdnjs.cloudflare.com/",
+                "https://stackpath.bootstrapcdn.com/"
+            ],
+            styleSrc: [
+                "'self'",
+                "https://cdn.maptiler.com",
+                "https://fonts.googleapis.com",
+                "https://cdn.jsdelivr.net",
+                "https://kit-free.fontawesome.com/",
+                "https://stackpath.bootstrapcdn.com",
+                "https://use.fontawesome.com/"
+            ],
+            imgSrc: [
+                "'self'",
+                "blob:",
+                "data:",
+                "https://res.cloudinary.com",
+                "https://images.unsplash.com",
+                "https://cdn.maptiler.com",
+  "https://t3.ftcdn.net"
+            ],
+            fontSrc: [
+                "'self'",
+                "https://fonts.gstatic.com"
+            ],
+            objectSrc: [],
+            workerSrc: ["'self'", "blob:"],
+            frameSrc: []
+        }
+    })
+);
 
 app.use(passport.initialize());
 app.use(passport.session());

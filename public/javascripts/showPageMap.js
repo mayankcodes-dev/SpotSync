@@ -5,7 +5,7 @@ const parsedCampground = JSON.parse(campground);
 const map = new maptilersdk.Map({
     container: 'map',
     style: maptilersdk.MapStyle.BRIGHT,
-    center: campground.geometry.coordinates, // starting position [lng, lat]
+    center: parsedCampground.geometry.coordinates, // starting position [lng, lat]
     zoom: 10 // starting zoom
 });
 
@@ -17,4 +17,4 @@ new maptilersdk.Marker()
                 `<h3>${parsedCampground.title}</h3><p>${parsedCampground.location}</p>`
             )
     )
-    .addTo(map)
+    .addTo(map);

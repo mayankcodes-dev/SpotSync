@@ -1,10 +1,20 @@
 <% layout('layouts/boilerplate')%>
-<h1>Register</h1>
 
-<form action="/register" method="POST" class="validated-form" novalidate>
+
+<div class="container d-flex justify-content-center align-items-center mt-5 mb-5">
+    <div class="row w-100">
+        <div class="col-12 col-md-8 col-lg-6 mx-auto wide-form">
+            <div class="card shadow">
+                <img src="https://t3.ftcdn.net/jpg/05/33/76/38/360_F_533763874_3JZruw5ZGXNrVS47ARY3oiEJ0ubrUvJC.jpg" alt="" srcset="" class="card-img-top">
+                <div class="card-body">
+         <h3 class="card-title text-center mb-4">Register</h3>
+         
+
+
+<form action="/register" method="POST" class="form-validate" novalidate>
     <div class="mb-3">
         <label class="form-label" for="username">Username</label>
-        <input class="form-control" type="text" id="username" name="username" required>
+        <input class="form-control" type="text" id="username" name="username" required autofocus>
         <div class="valid-feedback">Looks good!</div>
         <div class="invalid-feedback">Please fill out this field.</div>
     </div>
@@ -24,5 +34,11 @@
     <button class="btn btn-success" type="submit">Register</button>
 
 </form>
+
+                </div>
+       </div>
+        </div>
+    </div>
+</div>
 
 <script src="/javascripts/validateForms.js"></script>

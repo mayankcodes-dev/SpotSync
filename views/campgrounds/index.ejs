@@ -1,28 +1,40 @@
 <% layout('layouts/boilerplate') %>
-    <h1>All campground</h1>
-    
-    <ul>
-        <% for(let campground of campgrounds){ %>
-            <div class="card">
-                <div class="row">
-                    <div class="col-md-4">
-                        <% if(campground.images.length) { %>
-                        <img src="<%= campground.images[0].image  %>" alt="" class="img-fluid">
-                        <% }else{ %>
-                            <img src="https://res.cloudinary.com/dgqgzmzed/image/upload/v1758274628/YelpCamp/ztihhnd4typman05c4hm.jpg" alt="" class="img-fluid">
-                            <% } %>
-                    </div>
-                    <div class="col-md-8">
-                        <div class="card-body">
-                            <h5 class="class-title"><%= campground.title %></h5>
-                            <p class="class-text"><%= campground.description %></p>
-                            <p class="class-text">
-                                <small class="text-muted"><%= campground.location %></small>
-                            </p>
-                            <a href="campgrounds/<%= campground._id %>" class="btn btn-primary">View <%= campground.title %></a>
-                        </div>
+
+
+
+<div id="cluster-map"></div>
+<h1>All campground</h1>
+
+<ul>
+    <% for(let campground of campgrounds){ %>
+        <div class="card mb-3">
+            <div class="row">
+                <div class="col-md-4">
+                    <% if(campground.images.length) { %>
+                    <img src="<%= campground.images[0].url  %>" alt="" class="img-fluid">
+                    <% }else{ %>
+                        <img src="https://res.cloudinary.com/dgqgzmzed/image/upload/v1758274628/YelpCamp/ztihhnd4typman05c4hm.jpg" alt="" class="img-fluid">
+                        <% } %>
+                </div>
+                <div class="col-md-8">
+                    <div class="card-body">
+                        <h5 class="class-title"><%= campground.title %></h5>
+                        <p class="class-text"><%= campground.description %></p>
+                        <p class="class-text">
+                            <small class="text-muted"><%= campground.location %></small>
+                        </p>
+                        <a href="campgrounds/<%= campground._id %>" class="btn btn-primary">View <%= campground.title %></a>
                     </div>
                 </div>
             </div>
-            <% } %>
-    </ul>
+        </div>
+        <% } %>
+</ul>
+
+<script>
+    // These variables must be available before clusterMap.js loads
+    const maptilerApiKey = '<%= process.env.MAPTILER_API_KEY %>';
+    const campgrounds = <%- JSON.stringify(campgroundsGeoJSON) %>;
+</script>
+<script src="/javascripts/clusterMap.js"></script>
+

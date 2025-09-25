@@ -20,9 +20,13 @@ const helmet = require('helmet');
 const userRoutes = require('./routes/users');
 const campgroundRoutes = require('./routes/campgrounds');
 const reviewRoutes = require('./routes/reviews');
-const { name } = require('ejs');
 
-mongoose.connect('mongodb://localhost:27017/yelp-camp');
+const MongoDBStore = require('connect-mongo')(session);
+
+// Use MongoDB Atlas connection string from environment when provided,
+// otherwise fall back to local MongoDB for development.
+const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/yelp-camp';
+mongoose.connect(dbUrl);
 
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
@@ -42,9 +46,21 @@ app.use(methodOverride('_method'));
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(sanitizeV5({ replaceWith: '_' }));
 
+const store = new MongoDBStore({
+    url: dbUrl,
+    secret: process.env.SECRET,
+    touchAfter: 24 * 60 * 60 // time period in seconds
+});
+
+store.on("error", function(e){
+    console.log("SESSION STORE ERROR", e)
+});
+
 const sessionConfig = {
+    store: store,
     name: 'session',
-    secret: 'thisshouldbeabettersecret!',
+    // use a secret from environment in production
+    secret: process.env.SECRET || 'thisshouldbeabettersecret!',
     resave: false,
     saveUninitialized: true,
     cookie: {
@@ -138,6 +154,7 @@ app.use((err,req,res,next)=>{
     }
     res.status(statusCode).render('error', { err });
 })
-app.listen(3000,()=>{
-    console.log("Serving on port 3000")
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+    console.log(`Serving on port ${port}`)
 })

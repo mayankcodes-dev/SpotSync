@@ -25,7 +25,10 @@ const MongoDBStore = require('connect-mongo')(session);
 
 // Use MongoDB Atlas connection string from environment when provided,
 // otherwise fall back to local MongoDB for development.
-const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/yelp-camp';
+const dbUrl =
+             process.env.DB_URL ||
+              'mongodb://localhost:27017/yelp-camp';
+              
 mongoose.connect(dbUrl);
 
 const db = mongoose.connection;

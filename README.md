@@ -80,6 +80,3 @@ YelpCamp is a full-stack web application for sharing and reviewing campgrounds. 
 Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
 
 ---
-
-**If you have any questions or need further documentation, feel free to ask!**
-If you have any questions or need further documentation, feel free to ask!

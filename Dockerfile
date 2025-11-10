@@ -13,8 +13,6 @@ ENV CLOUDINARY_CLOUD_NAME=dgqgzmzed \
 RUN mkdir -p yelpcamp
 
 COPY . /yelpcamp
-COPY . ./package.json 
-COPY . ./package-lock.json 
 
 
 WORKDIR /yelpcamp

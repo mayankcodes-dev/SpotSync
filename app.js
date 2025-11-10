@@ -21,11 +21,13 @@ const userRoutes = require('./routes/users');
 const campgroundRoutes = require('./routes/campgrounds');
 const reviewRoutes = require('./routes/reviews');
 
-const MongoDBStore = require('connect-mongo')(session);
+const MongoDBStore = require('connect-mongo');
 
 // Use MongoDB connection string from environment when provided,
 // otherwise fall back to local MongoDB for development.
-const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/yelp-camp';
+const dbUrl = 
+    // process.env.DB_URL ||
+     'mongodb://localhost:27017/yelp-camp';
 mongoose.connect(dbUrl).catch(err => console.error('Mongo connection error:', err));
 
 const db = mongoose.connection;
@@ -46,10 +48,12 @@ app.use(methodOverride('_method'));
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(sanitizeV5({ replaceWith: '_' }));
 
-const store = new MongoDBStore({
-    url: dbUrl,
-    secret: process.env.SECRET,
-    touchAfter: 24 * 60 * 60 // time period in seconds
+const store = MongoDBStore.create({
+  mongoUrl: dbUrl,
+  touchAfter: 24 * 60 * 60, // time period in seconds
+  crypto: {
+    secret: process.env.SECRET || 'thisshouldbeabettersecret!'
+  }
 });
 
 store.on("error", function(e){

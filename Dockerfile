@@ -1,23 +1,17 @@
-FROM node
+FROM node:20
 
-
-ENV CLOUDINARY_CLOUD_NAME=dgqgzmzed \
-    CLOUDINARY_KEY=963466995631486 \
-    CLOUDINARY_SECRET=sb87383P1Kk119m6GkA1RMPPdII \
-    CLOUDINARY_URL=cloudinary://963466995631486:sb87383P1Kk119m6GkA1RMPPdII@dgqgzmzed \
-    MAPTILER_API_KEY=TgHrvqIkDktv9ln40nhF \
-    DB_URL=mongodb+srv://yelpUser:izAzXxyo8LLJMENe@cluster0.ke1aeig.mongodb.net \
-    SECRET=a-long-random-secret
-
-
-RUN mkdir -p yelpcamp
-
-COPY . /yelpcamp
-
-
+# Create app directory
 WORKDIR /yelpcamp
 
+# Copy package files and install dependencies first
+COPY package*.json ./
+RUN npm install
 
-CMD ["node", "/yelpcamp/app.js"]
+# Copy rest of the app
+COPY . .
 
+# Expose app port
 EXPOSE 3000
+
+# Use environment variables from .env
+CMD ["npm", "start"]

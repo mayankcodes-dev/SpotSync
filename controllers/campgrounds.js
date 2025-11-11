@@ -123,6 +123,7 @@ module.exports.updateCampground = async (req,res) =>{
         }
         await campground.updateOne({ $pull: { images: { filename: { $in: req.body.deleteImages } } } })
     }
+    res.redirect(`/campgrounds/${id}`);
 } 
 
 module.exports.deleteCampground = async (req,res) =>{

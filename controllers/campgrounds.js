@@ -75,6 +75,17 @@ module.exports.showCampground = async (req, res) => {
         req.flash('error', 'Cannot find that campground!');
         return res.redirect('/campgrounds');
     }
+    // Defensive: if the author or any review author was deleted, make a safe placeholder
+    if (!campground.author) {
+        campground.author = { username: 'Unknown', _id: null };
+    }
+    if (campground.reviews && campground.reviews.length) {
+        for (let rev of campground.reviews) {
+            if (!rev.author) {
+                rev.author = { username: 'Unknown', _id: null };
+            }
+        }
+    }
     res.render('campgrounds/show', { campground });
 }
 

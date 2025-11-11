@@ -26,7 +26,7 @@ const MongoDBStore = require('connect-mongo');
 // Use MongoDB connection string from environment when provided,
 // otherwise fall back to local MongoDB for development.
 const dbUrl = 
-    process.env.DB_URL ||
+    // process.env.DB_URL ||
      'mongodb://localhost:27017/yelp-camp';
 mongoose.connect(dbUrl).catch(err => console.error('Mongo connection error:', err));
 

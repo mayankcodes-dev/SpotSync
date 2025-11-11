@@ -28,7 +28,11 @@
                 <li class="list-group-item">Submitted by <%= campground.author.username%></li>
                 <li class="list-group-item">$<%= campground.price%>/night</li>
             </ul>
-            <%  if( currentUser && campground.author.equals(currentUser._id))  {%>
+            <% 
+              const authorId = campground.author && campground.author._id ? campground.author._id : null;
+              const isAuthor = currentUser && authorId && (authorId.equals ? authorId.equals(currentUser._id) : String(authorId) === String(currentUser._id));
+            %>
+            <% if (isAuthor) { %>
             <div class="card-body">
                 <a class="card-link btn btn-info" href="/campgrounds/<%=campground._id%>/edit">Edit</a>
                 <form class="d-inline" action="/campgrounds/<%=campground._id%>?_method=DELETE" method="POST">
@@ -81,7 +85,11 @@
             Rated: <%= review.rating %> stars
           </p>
           <p class="card-text">Review: <%= review.body %></p>
-          <% if(currentUser && review.author.equals(currentUser._id)) {%>
+          <% 
+            const reviewAuthorId = review.author && review.author._id ? review.author._id : null;
+            const canDeleteReview = currentUser && reviewAuthorId && (reviewAuthorId.equals ? reviewAuthorId.equals(currentUser._id) : String(reviewAuthorId) === String(currentUser._id));
+          %>
+          <% if (canDeleteReview) { %>
           <form action="/campgrounds/<%= campground._id %>/reviews/<%= review._id %>?_method=DELETE" method="POST">
             <button class="btn btn-sm btn-danger">Delete</button>
           </form>

@@ -1,8 +1,234 @@
-#cluster-map{
+/* Airbnb-inspired theme — Plus Jakarta Sans + coral accent */
+:root {
+    --yc-coral: #ff385c;
+    --yc-coral-dark: #e31c5f;
+    --yc-text: #222222;
+    --yc-muted: #717171;
+    --yc-border: #dddddd;
+    --yc-bg: #f7f7f7;
+    --bs-primary: #ff385c;
+    --bs-primary-rgb: 255, 56, 92;
+    --bs-link-color: #222222;
+    --bs-link-hover-color: #ff385c;
+    --bs-body-font-family: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --bs-body-color: var(--yc-text);
+    --bs-border-radius: 0.75rem;
+    --bs-border-radius-lg: 1rem;
+    --bs-border-radius-xl: 1.25rem;
+}
+
+body {
+    background-color: var(--yc-bg) !important;
+    color: var(--yc-text);
+    letter-spacing: -0.01em;
+}
+
+.main-content {
+    min-height: calc(100vh - 200px);
+}
+
+.main-content.main-content--auth {
+    padding-top: 1.25rem !important;
+    padding-bottom: 1.25rem !important;
+}
+
+/* Maps — explicit dimensions so MapLibre canvas gets non-zero size */
+.cluster-map-wrap,
+#cluster-map {
     width: 100%;
     height: 500px;
+    min-height: 500px;
 }
+
+.show-page-map,
 #map {
     width: 100%;
-    height: 300px;
+    height: 360px;
+    min-height: 360px;
+}
+
+.object-fit-cover {
+    object-fit: cover;
+}
+
+/* Navbar */
+.navbar-yc {
+    background: #ffffff !important;
+    border-bottom: 1px solid var(--yc-border);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.navbar-yc .nav-link {
+    color: var(--yc-text) !important;
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 0.5rem 0.75rem !important;
+    border-radius: 1.5rem;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.navbar-yc .nav-link:hover {
+    background-color: var(--yc-bg);
+    color: var(--yc-text) !important;
+}
+
+.navbar-yc .nav-link.active {
+    background-color: var(--yc-bg);
+    color: var(--yc-text) !important;
+    font-weight: 600;
+}
+
+.navbar-yc .navbar-brand {
+    color: var(--yc-coral) !important;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.navbar-yc .navbar-toggler {
+    border-color: var(--yc-border);
+}
+
+.navbar-yc .navbar-toggler-icon {
+    filter: invert(0.25);
+}
+
+/* Buttons */
+.btn-primary {
+    --bs-btn-bg: var(--yc-coral);
+    --bs-btn-border-color: var(--yc-coral);
+    --bs-btn-hover-bg: var(--yc-coral-dark);
+    --bs-btn-hover-border-color: var(--yc-coral-dark);
+    --bs-btn-active-bg: var(--yc-coral-dark);
+    --bs-btn-active-border-color: var(--yc-coral-dark);
+    font-weight: 600;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--yc-text);
+    --bs-btn-border-color: var(--yc-border);
+    --bs-btn-hover-bg: var(--yc-bg);
+    --bs-btn-hover-color: var(--yc-coral);
+    --bs-btn-hover-border-color: var(--yc-text);
+    --bs-btn-active-bg: var(--yc-bg);
+    --bs-btn-active-color: var(--yc-coral);
+    font-weight: 600;
+}
+
+.btn-light {
+    --bs-btn-bg: #ffffff;
+    --bs-btn-border-color: var(--yc-border);
+    --bs-btn-color: var(--yc-text);
+    font-weight: 600;
+}
+
+/* Cards */
+.card {
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    border-color: #ebebeb !important;
+}
+
+.card:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08) !important;
+    transform: translateY(-2px);
+}
+
+.text-muted {
+    color: var(--yc-muted) !important;
+}
+
+/* Home landing */
+.home-hero {
+    background:
+        linear-gradient(180deg, rgba(247, 247, 247, 0.97) 0%, rgba(247, 247, 247, 0.85) 100%),
+        url("https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=2000&q=80");
+    background-size: cover;
+    background-position: center;
+    border-radius: var(--bs-border-radius-xl);
+    border: 1px solid var(--yc-border);
+}
+
+.home-hero h1 {
+    color: var(--yc-text);
+    letter-spacing: -0.03em;
+}
+
+.home-hero .lead {
+    color: var(--yc-muted);
+    max-width: 36rem;
+}
+
+/* Auth pages — image + form split */
+.auth-card {
+    overflow: hidden;
+    border-radius: var(--bs-border-radius-xl) !important;
+}
+
+.auth-visual {
+    min-height: 220px;
+    background-size: cover;
+    background-position: center;
+}
+
+@media (min-width: 768px) {
+    .auth-visual {
+        min-height: 100%;
+        min-height: 420px;
+    }
+}
+
+.auth-visual-login {
+    background-image: linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.25),
+            rgba(0, 0, 0, 0.45)
+        ),
+        url("https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?auto=format&fit=crop&w=1200&q=80");
+}
+
+.auth-visual-register {
+    background-image: linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.25),
+            rgba(0, 0, 0, 0.45)
+        ),
+        url("https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&w=1200&q=80");
+}
+
+.footer-yc {
+    background: #ffffff;
+    border-top: 1px solid var(--yc-border);
+    font-size: 0.875rem;
+    color: var(--yc-muted);
+}
+
+/* Forms */
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--yc-coral);
+    box-shadow: 0 0 0 0.2rem rgba(255, 56, 92, 0.15);
+}
+
+/* Alerts */
+.alert-success {
+    border: 1px solid #b7e4c7;
+    background-color: #f4fcf7;
+    color: #1b4332;
+}
+
+.alert-danger {
+    border: 1px solid #f5c2c7;
+}
+
+/* Badge price */
+.badge.bg-success {
+    background-color: var(--yc-text) !important;
+    font-weight: 600;
+}
+
+/* MapLibre / MapTiler controls */
+.maplibregl-ctrl-bottom-right,
+.maplibregl-ctrl-bottom-left {
+    z-index: 2;
 }

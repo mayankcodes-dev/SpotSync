@@ -1,6 +1,6 @@
-<footer class="footer bg-dark py-3 mt-5 mt-auto">
-    <div class="container">
-        <span class="text-white-50">&copy; YelpCamp 2025</span>
+<footer class="footer-yc py-4 mt-auto">
+    <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+        <span>&copy; <span id="year"></span> YelpCamp</span>
     </div>
-
+    <script>document.getElementById('year').innerText = new Date().getFullYear();</script>
 </footer>

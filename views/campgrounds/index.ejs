@@ -1,40 +1,44 @@
 <% layout('layouts/boilerplate') %>
 
+<div class="mb-4 rounded-4 shadow-sm overflow-hidden bg-white border border-light">
+    <div id="cluster-map" class="cluster-map-wrap"></div>
+</div>
 
+<div class="d-flex flex-column flex-md-row align-items-start justify-content-between gap-3 mb-4">
+    <div>
+        <h1 class="display-6 fw-bold">All campgrounds</h1>
+        <p class="text-muted mb-0">Discover places to stay and share your own listings.</p>
+    </div>
+    <a href="/campgrounds/new" class="btn btn-primary btn-lg rounded-pill px-4">Add campground</a>
+</div>
 
-<div id="cluster-map"></div>
-<h1>All campground</h1>
-
-<ul>
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
     <% for(let campground of campgrounds){ %>
-        <div class="card mb-3">
-            <div class="row">
-                <div class="col-md-4">
-                    <% if(campground.images.length) { %>
-                    <img crossorigin="anonymous" src="<%= campground.images[0].url  %>" alt="" class="img-fluid">
-                    <% }else{ %>
-                        <img crossorigin="anonymous" src="https://res.cloudinary.com/dgqgzmzed/image/upload/v1758756520/YelpCamp/lhd3nrtwkvj5ajqpc3im.jpg" alt="" class="img-fluid">
-                        <% } %>
+    <div class="col">
+        <div class="card h-100 border-0 shadow-sm bg-white rounded-4 overflow-hidden">
+            <% if(campground.images.length) { %>
+                <img crossorigin="anonymous" src="<%= campground.images[0].url  %>" alt="Campground image" class="card-img-top object-fit-cover" style="height: 240px;">
+            <% }else{ %>
+                <img crossorigin="anonymous" src="https://res.cloudinary.com/dgqgzmzed/image/upload/v1758756520/YelpCamp/lhd3nrtwkvj5ajqpc3im.jpg" alt="Default campground image" class="card-img-top object-fit-cover" style="height: 240px;">
+            <% } %>
+            <div class="card-body d-flex flex-column">
+                <div class="mb-2">
+                    <h5 class="card-title mb-1 fw-semibold"><%= campground.title %></h5>
+                    <p class="text-muted small mb-0"><i class="bi bi-geo-alt-fill me-1"></i><%= campground.location %></p>
                 </div>
-                <div class="col-md-8">
-                    <div class="card-body">
-                        <h5 class="class-title"><%= campground.title %></h5>
-                        <p class="class-text"><%= campground.description %></p>
-                        <p class="class-text">
-                            <small class="text-muted"><%= campground.location %></small>
-                        </p>
-                        <a href="campgrounds/<%= campground._id %>" class="btn btn-primary">View <%= campground.title %></a>
-                    </div>
+                <p class="card-text text-secondary mb-3 text-truncate" style="max-height: 4.5em;"><%= campground.description %></p>
+                <div class="mt-auto d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <span class="badge bg-success">$<%= campground.price %>/night</span>
+                    <a href="/campgrounds/<%= campground._id %>" class="btn btn-outline-primary btn-sm rounded-pill px-4">View details</a>
                 </div>
             </div>
         </div>
-        <% } %>
-</ul>
+    </div>
+    <% } %>
+</div>
 
 <script>
-    // These variables must be available before clusterMap.js loads
-    const maptilerApiKey = '<%= process.env.MAPTILER_API_KEY %>';
+    const maptilerApiKey = '<%- maptilerApiKey %>';
     const campgrounds = <%- JSON.stringify(campgroundsGeoJSON) %>;
 </script>
 <script src="/javascripts/clusterMap.js"></script>
-

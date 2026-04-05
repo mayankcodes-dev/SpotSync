@@ -80,15 +80,17 @@ app.use(flash());
 app.use(
     helmet.contentSecurityPolicy({
         directives: {
-            defaultSrc: [],
+            defaultSrc: ["'self'"],
             connectSrc: [
                 "'self'",
                 "https://api.maptiler.com",
-                "https://cdn.jsdelivr.net"
+                "https://cdn.jsdelivr.net",
+                "https://events.maptiler.com"
             ],
             scriptSrc: [
                 "'self'",
                 "'unsafe-inline'",
+                "'unsafe-eval'",
                 "https://cdn.maptiler.com",
                 "https://cdn.jsdelivr.net",
                 "https://kit.fontawesome.com/",
@@ -97,6 +99,7 @@ app.use(
             ],
             styleSrc: [
                 "'self'",
+                "'unsafe-inline'",
                 "https://cdn.maptiler.com",
                 "https://fonts.googleapis.com",
                 "https://cdn.jsdelivr.net",
@@ -111,11 +114,13 @@ app.use(
                 "https://res.cloudinary.com",
                 "https://images.unsplash.com",
                 "https://cdn.maptiler.com",
-  "https://t3.ftcdn.net"
+                "https://api.maptiler.com",
+                "https://t3.ftcdn.net"
             ],
             fontSrc: [
                 "'self'",
-                "https://fonts.gstatic.com"
+                "https://fonts.gstatic.com",
+                "https://cdn.maptiler.com"
             ],
             objectSrc: [],
             workerSrc: ["'self'", "blob:"],
@@ -136,6 +141,12 @@ app.use((req,res,next)=>{
     res.locals.currentUser = req.user;
     res.locals.success = req.flash('success');
     res.locals.error = req.flash('error');
+    res.locals.maptilerApiKey = process.env.MAPTILER_API_KEY || '';
+    let mainContentClass = '';
+    if (req.path === '/login' || req.path === '/register') {
+        mainContentClass = 'main-content--auth';
+    }
+    res.locals.mainContentClass = mainContentClass;
     next();
 })
 
@@ -144,7 +155,7 @@ app.use('/campgrounds',campgroundRoutes);
 app.use('/campgrounds/:id/reviews',reviewRoutes);
 
 app.get('/', (req, res) =>{
-    res.render('home')
+    res.render('home', { activePage: 'home' })
 })
 
 app.all(/(.*)/, (req, res, next) => {

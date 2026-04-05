@@ -1,24 +1,42 @@
-
-<nav class="navbar sticky-top navbar-expand-lg bg-dark navbar-dark">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#">YelpCamp</a>
+<nav class="navbar navbar-expand-lg navbar-light navbar-yc sticky-top">
+  <div class="container">
+    <% const page = typeof activePage !== 'undefined' ? activePage : ''; %>
+    <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+      <img src="https://res.cloudinary.com/dgqgzmzed/image/upload/v1758799239/pngtree-camping-logo-design-vector-png-image_5284762_iedxjj.jpg" alt="YelpCamp" width="32" height="32" class="rounded-circle border" style="border-color: var(--yc-border) !important;">
+      <span>YelpCamp</span>
+    </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <div class="navbar-nav me-auto">
-          <a class="nav-link" href="/">Home</a>
-          <a class="nav-link" href="/campgrounds">Campgrounds</a>
-          <a class="nav-link" href="/campgrounds/new">Add Campground</a>
-      </div>
-      <div class="navbar-nav">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0 align-items-lg-center">
+        <li class="nav-item">
+          <a class="nav-link <%= page === 'home' ? 'active' : '' %>" href="/">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link <%= page === 'campgrounds' ? 'active' : '' %>" href="/campgrounds">Campgrounds</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link <%= page === 'new' ? 'active' : '' %>" href="/campgrounds/new">Add Campground</a>
+        </li>
+      </ul>
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-2">
         <% if(!currentUser){ %>
-          <a class="nav-link" href="/login">Login</a>
-          <a class="nav-link" href="/register">Register</a>
+          <li class="nav-item">
+            <a class="nav-link <%= page === 'login' ? 'active' : '' %>" href="/login">Login</a>
+          </li>
+          <li class="nav-item">
+            <a class="btn btn-primary btn-sm px-3 rounded-pill" href="/register">Register</a>
+          </li>
         <% } else { %>
-          <a class="nav-link" href="/logout">Logout</a>
+          <li class="nav-item d-none d-lg-block">
+            <span class="text-muted small">Hello, <%= currentUser.username %></span>
+          </li>
+          <li class="nav-item">
+            <a class="btn btn-outline-primary btn-sm px-3 rounded-pill" href="/logout">Logout</a>
+          </li>
         <% } %>
-      </div>
-       </div>
+      </ul>
     </div>
+  </div>
 </nav>

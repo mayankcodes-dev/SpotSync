@@ -7,26 +7,32 @@ maptilerClient.config.apiKey = process.env.MAPTILER_API_KEY;
 
 module.exports.index =async (req, res) =>{
     const campgrounds = await Campground.find({});
-    // Transform campgrounds to GeoJSON FeatureCollection
-    const features = campgrounds.map(cg => ({
-        type: 'Feature',
-        geometry: cg.geometry,
-        properties: {
-            _id: cg._id,
-            title: cg.title,
-            location: cg.location,
-            popUpMarkup: `<strong><a href='/campgrounds/${cg._id}'>${cg.title}</a></strong><p>${cg.description.substring(0, 20)}...</p>`
-        }
-    }));
+    // Transform campgrounds to GeoJSON FeatureCollection (MapLibre requires valid Point geometries)
+    const features = campgrounds
+        .filter(cg => cg.geometry && Array.isArray(cg.geometry.coordinates) && cg.geometry.coordinates.length >= 2)
+        .map(cg => {
+            const desc = cg.description || '';
+            const snippet = desc.length > 20 ? `${desc.substring(0, 20)}...` : desc;
+            return {
+                type: 'Feature',
+                geometry: cg.geometry,
+                properties: {
+                    _id: cg._id,
+                    title: cg.title,
+                    location: cg.location,
+                    popUpMarkup: `<strong><a href="/campgrounds/${cg._id}">${cg.title}</a></strong><p>${snippet}</p>`
+                }
+            };
+        });
     const campgroundsGeoJSON = {
         type: 'FeatureCollection',
         features
     };
-    res.render('campgrounds/index', { campgrounds, campgroundsGeoJSON });
+    res.render('campgrounds/index', { campgrounds, campgroundsGeoJSON, activePage: 'campgrounds' });
 }
 
 module.exports.renderNewForm = (req,res) =>{
-     res.render('campgrounds/new');
+     res.render('campgrounds/new', { activePage: 'new' });
 }
 
 module.exports.createCampground = async (req,res,next)=>{   
@@ -86,7 +92,7 @@ module.exports.showCampground = async (req, res) => {
     //         }
     //     }
     // }
-    res.render('campgrounds/show', { campground });
+    res.render('campgrounds/show', { campground, activePage: 'campgrounds' });
 }
 
 module.exports.renderEditForm = async (req,res) =>{
@@ -95,7 +101,7 @@ module.exports.renderEditForm = async (req,res) =>{
         req.flash('error', 'Cannot find that campground!');
         return res.redirect('/campgrounds');
     }
-    res.render('campgrounds/edit', { campground });
+    res.render('campgrounds/edit', { campground, activePage: 'campgrounds' });
 }
 
 module.exports.updateCampground = async (req,res) =>{

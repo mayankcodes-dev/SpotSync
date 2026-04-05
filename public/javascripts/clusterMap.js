@@ -1,3 +1,9 @@
+if (typeof maptilersdk === 'undefined' || !maptilerApiKey) {
+    const el = document.getElementById('cluster-map');
+    if (el) {
+        el.innerHTML = '<div class="d-flex align-items-center justify-content-center h-100 text-muted small p-4 text-center">Map unavailable. Add a valid MAPTILER_API_KEY in your environment to show the cluster map.</div>';
+    }
+} else {
 maptilersdk.config.apiKey = maptilerApiKey;
 
 const map = new maptilersdk.Map({
@@ -27,11 +33,11 @@ map.on('load', function () {
             'circle-color': [
                 'step',
                 ['get', 'point_count'],
-                '#00BCD4',
+                '#FF385C',
                 10,
-                '#2196F3',
+                '#E31C5F',
                 30,
-                '#3F51B5'
+                '#B02A48'
             ],
             'circle-radius': [
                 'step',
@@ -63,7 +69,7 @@ map.on('load', function () {
         source: 'campgrounds',
         filter: ['!', ['has', 'point_count']],
         paint: {
-            'circle-color': '#11b4da',
+            'circle-color': '#FF385C',
             'circle-radius': 4,
             'circle-stroke-width': 1,
             'circle-stroke-color': '#fff'
@@ -111,3 +117,4 @@ map.on('load', function () {
         map.getCanvas().style.cursor = '';
     });
 });
+}

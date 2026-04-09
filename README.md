@@ -79,8 +79,5 @@ YelpCamp is a full-stack web application for sharing and reviewing campgrounds. 
 
 Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
 
-## Deployment
-
-Yelpcamp is deployed at render .
-https://yelpcamp-1-wcof.onrender.com/
+## Yelpcamp is deployed at render. https://yelpcamp-1-wcof.onrender.com/
 ---

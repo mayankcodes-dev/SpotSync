@@ -203,6 +203,42 @@ body {
     color: var(--yc-muted);
 }
 
+.footer-copy {
+    color: var(--yc-muted);
+}
+
+.footer-credit {
+    color: var(--yc-muted);
+}
+
+.footer-name {
+    background: linear-gradient(90deg, var(--yc-coral) 0%, #e31c5f 60%, #c0057a 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+}
+
+.footer-name:hover {
+    opacity: 0.8;
+}
+
+.footer-icon-link {
+    color: var(--yc-muted);
+    font-size: 1.1rem;
+    text-decoration: none;
+    transition: color 0.2s ease, transform 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+.footer-icon-link:hover {
+    color: var(--yc-coral);
+    transform: translateY(-2px);
+}
+
 /* Forms */
 .form-control:focus,
 .form-select:focus {

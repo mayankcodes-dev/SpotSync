@@ -1,69 +1,152 @@
-# YelpCamp
+# YelpCamp 🏕️
 
-YelpCamp is a full-stack web application for sharing and reviewing campgrounds. Users can register, log in, create campgrounds, leave reviews, and view interactive maps. The project demonstrates authentication, authorization, CRUD operations, and real-time map integration.
+> A full-stack campground listing and review platform — discover, share, and review campgrounds around the world.
 
-## Features
+![Node.js](https://img.shields.io/badge/Node.js-v18%2B-339933?logo=node.js&logoColor=white)
+![Express](https://img.shields.io/badge/Express-v5-000000?logo=express&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-5-7952B3?logo=bootstrap&logoColor=white)
+![License](https://img.shields.io/badge/License-ISC-blue)
+![Live](https://img.shields.io/badge/Live-Render-46E3B7?logo=render&logoColor=white)
 
-- **User Authentication**: Register, login, logout with Passport.js local strategy
-- **Campground Management**: Create, read, update, and delete campgrounds with image uploads
-- **Reviews System**: Add and manage reviews with ratings for campgrounds
-- **Interactive Maps**: MapTiler integration for displaying campground locations
-- **Image Management**: Cloudinary integration for secure image storage and management
-- **Session Management**: Secure session management with MongoDB store
-- **Authorization**: Role-based access control (author-only edit/delete)
-- **Input Validation**: Server-side validation with Joi schemas
-- **Security**: Helmet for security headers, input sanitization, CORS protection
+**Live Demo →** [https://yelpcamp-1-wcof.onrender.com](https://yelpcamp-1-wcof.onrender.com)
 
-## Tech Stack
+---
+
+## 📋 Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Environment Variables](#environment-variables)
+- [API Routes](#api-routes)
+- [Database Models](#database-models)
+- [Security](#security)
+- [Docker](#docker)
+- [Author](#author)
+
+---
+
+## Overview
+
+YelpCamp is a full-stack web application inspired by Yelp, built specifically for campgrounds. Users can browse campgrounds on an interactive map, create their own listings with photo uploads, and leave star-rated reviews. The project demonstrates real-world patterns including authentication, authorization, cloud storage, geolocation, and secure session management.
+
+---
+
+## ✨ Features
+
+| Feature | Description |
+|---|---|
+| 🔐 Authentication | Register, login, logout via Passport.js local strategy |
+| 🏕️ Campground CRUD | Create, view, edit, and delete campground listings |
+| 🖼️ Image Uploads | Multi-image upload via Multer + Cloudinary |
+| ⭐ Reviews & Ratings | Star-rated reviews with author-only delete |
+| 🗺️ Interactive Maps | MapTiler SDK for geolocation and map display |
+| 🔒 Authorization | Author-only edit/delete for campgrounds and reviews |
+| 🛡️ Security | Helmet CSP headers, NoSQL injection prevention, input sanitization |
+| 📦 Session Store | Persistent sessions stored in MongoDB via connect-mongo |
+| ✅ Validation | Server-side validation using Joi schemas |
+| 📱 Responsive UI | Mobile-friendly Bootstrap 5 layout |
+
+---
+
+## 🛠️ Tech Stack
 
 ### Backend
-- **Node.js**: JavaScript runtime environment
-- **Express.js**: Web application framework
-- **MongoDB**: NoSQL database
-- **Mongoose**: ODM for MongoDB
+- **Node.js** (v18+) — JavaScript runtime
+- **Express.js** (v5) — Web framework
+- **MongoDB** + **Mongoose** (v8) — Database & ODM
 
 ### Authentication & Security
-- **Passport.js**: Authentication middleware with local strategy
-- **passport-local-mongoose**: Mongoose authentication plugin
-- **Helmet**: Security headers middleware
-- **express-mongo-sanitize**: NoSQL injection prevention
+- **Passport.js** — Authentication middleware (local strategy)
+- **passport-local-mongoose** — Mongoose plugin for auth
+- **Helmet** (v8) — HTTP security headers & CSP
+- **express-mongo-sanitize** — NoSQL injection prevention
+- **sanitize-html** — HTML input sanitization
 
 ### Storage & Media
-- **Cloudinary**: Cloud image storage and transformation
-- **multer**: File upload middleware
-- **multer-storage-cloudinary**: Cloudinary storage for multer
+- **Cloudinary** — Cloud image storage
+- **Multer** + **multer-storage-cloudinary** — File upload handling
 
 ### Frontend & Templating
-- **EJS**: Embedded JavaScript templating
-- **ejs-mate**: EJS layout/template engine
-- **Bootstrap**: CSS framework (in views)
+- **EJS** + **ejs-mate** — Server-side templating with layouts
+- **Bootstrap 5** — Responsive UI components
+- **Font Awesome** — Icons
 
 ### Maps & Geolocation
-- **@maptiler/sdk**: Interactive maps library
-- **@maptiler/client**: MapTiler client library
+- **@maptiler/sdk** — Interactive map rendering
+- **@maptiler/client** — Geocoding API client
 
-### Session & Flash Messages
-- **express-session**: Session middleware
-- **connect-mongo**: MongoDB session store
-- **connect-flash**: Flash message middleware
+### Session & Messaging
+- **express-session** — Session middleware
+- **connect-mongo** — MongoDB-backed session store
+- **connect-flash** — Flash messages
 
-### Validation
-- **Joi**: Data validation library
+### Utilities
+- **dotenv** — Environment variable management
+- **method-override** — RESTful HTTP method support (PUT/DELETE via forms)
+- **Joi** — Schema validation
 
-### Other
-- **dotenv**: Environment variable management
-- **method-override**: HTTP method override middleware
+---
 
-## Installation
+## 📁 Project Structure
+
+```
+YELPCAMP/
+├── app.js                    # Entry point — Express setup, middleware, routes
+├── middleware.js             # isLoggedIn, isAuthor, validateCampground, etc.
+├── schemas.js                # Joi validation schemas
+├── Dockerfile                # Docker container configuration
+├── controllers/
+│   ├── campgrounds.js        # Campground CRUD logic
+│   ├── reviews.js            # Review create/delete logic
+│   └── users.js              # Register, login, logout logic
+├── routes/
+│   ├── campgrounds.js        # /campgrounds routes
+│   ├── reviews.js            # /campgrounds/:id/reviews routes
+│   └── users.js              # /register, /login, /logout routes
+├── models/
+│   ├── campground.js         # Campground schema (with geospatial support)
+│   ├── review.js             # Review schema
+│   └── user.js               # User schema (passport-local-mongoose)
+├── cloudinary/
+│   └── index.js              # Cloudinary + multer storage config
+├── utils/
+│   ├── catchAsync.js         # Async error handler wrapper
+│   ├── ExpressError.js       # Custom error class
+│   └── mongoSanitizeV5.js   # Custom sanitization middleware
+├── views/
+│   ├── layouts/
+│   │   └── boilerplate.ejs   # Base layout template
+│   ├── partials/
+│   │   ├── navbar.ejs
+│   │   └── footer.ejs
+│   ├── campgrounds/          # Campground views (index, show, new, edit)
+│   ├── users/                # Login & register views
+│   ├── home.ejs
+│   └── error.ejs
+├── public/
+│   ├── stylesheets/          # Custom CSS
+│   └── javascripts/          # Client-side JS (map scripts, etc.)
+├── seeds/                    # Database seeding scripts
+├── package.json
+└── .env                      # Environment variables (not committed)
+```
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js v18 or higher
-- MongoDB (local or MongoDB Atlas)
-- npm or yarn
-- Cloudinary account (for image uploads)
-- MapTiler account (for maps)
 
-### Setup Instructions
+- Node.js **v18+**
+- MongoDB (local) or a [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) cluster
+- [Cloudinary](https://cloudinary.com/) account
+- [MapTiler](https://www.maptiler.com/) account
+
+### Installation
 
 1. **Clone the repository**
    ```bash
@@ -76,242 +159,162 @@ YelpCamp is a full-stack web application for sharing and reviewing campgrounds. 
    npm install
    ```
 
-3. **Configure environment variables**
+3. **Set up environment variables** (see [Environment Variables](#environment-variables))
 
-   Create a `.env` file in the root directory:
-
-   ```env
-   NODE_ENV=development
-   PORT=3000
-
-   DB_URL=mongodb://localhost:27017/yelp-camp
-
-   SECRET=your_session_secret_key
-
-   CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
-   CLOUDINARY_API_KEY=your_cloudinary_api_key
-   CLOUDINARY_API_SECRET=your_cloudinary_api_secret
-
-   MAPTILER_API_KEY=your_maptiler_api_key
-   ```
-
-4. **Start the application**
-   ```bash
-   npm start
-   ```
-
-5. **For development with auto-reload**
+4. **Run in development mode**
    ```bash
    npm run dev
    ```
 
-The application will run on http://localhost:3000
+5. **Or run in production mode**
+   ```bash
+   npm start
+   ```
 
-## Project Structure
+The app will be available at **http://localhost:3000**
 
-```text
-YELPCAMP/
-├── app.js                  # Main application entry point
-├── middleware.js           # Custom middleware functions
-├── schemas.js              # Joi validation schemas
-├── controllers/            # Route controllers
-│   ├── users.js            # User authentication controllers
-│   ├── campgrounds.js      # Campground CRUD controllers
-│   └── reviews.js          # Review controllers
-├── routes/                 # Express routes
-│   ├── users.js            # User routes (register, login, logout)
-│   ├── campgrounds.js      # Campground routes
-│   └── reviews.js          # Review routes
-├── models/                 # Mongoose schemas
-│   ├── user.js             # User model
-│   ├── campground.js       # Campground model with geospatial support
-│   └── review.js           # Review model
-├── cloudinary/             # Cloudinary configuration
-├── utils/                  # Utility functions
-│   ├── catchAsync.js       # Async error handling wrapper
-│   ├── ExpressError.js     # Custom error class
-│   └── mongoSanitizeV5.js  # MongoDB sanitization
-├── views/                  # EJS templates
-├── public/                 # Static assets (CSS, JS, images)
-├── seeds/                  # Database seeding scripts
-├── package.json
-└── README.md
+---
+
+## ⚙️ Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+# App
+NODE_ENV=development
+PORT=3000
+
+# Database
+DB_URL=mongodb://localhost:27017/yelp-camp
+
+# Session
+SECRET=your_strong_session_secret
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# MapTiler
+MAPTILER_API_KEY=your_maptiler_api_key
 ```
 
-## API Endpoints
+> ⚠️ Never commit your `.env` file. It is already listed in `.gitignore`.
 
-### Authentication Routes (Base: "/")
+---
 
-#### User Registration
-- GET "/register" - Render registration form
-- POST "/register" - Register a new user
-- Body: `{ username, email, password }`
-- Returns: Redirects to "/campgrounds" on success
+## 🔌 API Routes
 
-#### User Login
-- GET "/login" - Render login form
-- POST "/login" - Authenticate user
-- Body: `{ username, password }`
-- Returns: Redirects to original URL or "/campgrounds"
+### Authentication
 
-#### User Logout
-- GET "/logout" - Logout current user
-- Returns: Redirects to "/campgrounds"
+| Method | Route | Description | Auth Required |
+|--------|-------|-------------|---------------|
+| GET | `/register` | Registration form | No |
+| POST | `/register` | Create new user | No |
+| GET | `/login` | Login form | No |
+| POST | `/login` | Authenticate user | No |
+| GET | `/logout` | Logout current user | Yes |
 
-### Campground Routes (Base: "/campgrounds")
+### Campgrounds
 
-#### Get All Campgrounds
-- GET "/campgrounds" - Retrieve all campgrounds
-- Returns: List of campgrounds with pagination
-- Query params: `page`, `limit`
+| Method | Route | Description | Auth Required |
+|--------|-------|-------------|---------------|
+| GET | `/campgrounds` | All campgrounds | No |
+| GET | `/campgrounds/new` | New campground form | Yes |
+| POST | `/campgrounds` | Create campground | Yes |
+| GET | `/campgrounds/:id` | Campground details | No |
+| GET | `/campgrounds/:id/edit` | Edit form | Yes (author only) |
+| PUT | `/campgrounds/:id` | Update campground | Yes (author only) |
+| DELETE | `/campgrounds/:id` | Delete campground | Yes (author only) |
 
-#### Create New Campground
-- GET "/campgrounds/new" - Render new campground form (requires login)
-- POST "/campgrounds" - Create a new campground (requires login)
-- Body: `{ title, description, price, location, image[] }`
-- File uploads: Multiple images via multer/Cloudinary
-- Returns: Redirects to new campground show page
+### Reviews
 
-#### Get Campground by ID
-- GET "/campgrounds/:id" - Get specific campground details
-- Returns: Campground data with reviews and map
+| Method | Route | Description | Auth Required |
+|--------|-------|-------------|---------------|
+| POST | `/campgrounds/:id/reviews` | Add a review | Yes |
+| DELETE | `/campgrounds/:id/reviews/:reviewId` | Delete a review | Yes (author only) |
 
-#### Update Campground
-- GET "/campgrounds/:id/edit" - Render edit form (author only)
-- PUT "/campgrounds/:id" - Update campground (author only)
-- Body: `{ title, description, price, location, image[] }`
-- Returns: Redirects to updated campground page
+---
 
-#### Delete Campground
-- DELETE "/campgrounds/:id" - Delete campground (author only)
-- Returns: Redirects to "/campgrounds"
+## 🗃️ Database Models
 
-### Review Routes (Base: "/campgrounds/:id/reviews")
-
-#### Create Review
-- POST "/campgrounds/:id/reviews" - Add review to campground (requires login)
-- Body: `{ body, rating }`
-- Returns: Redirects to campground page
-
-#### Delete Review
-- DELETE "/campgrounds/:id/reviews/:reviewID" - Delete review (review author only)
-- Returns: Redirects to campground page
-
-## Database Models
-
-### User Model
-```javascript
+### User
+```js
 {
-  username: String (unique),
-  email: String (required, unique),
-  password: String (hashed via passport-local-mongoose)
+  username: String,       // unique
+  email:    String,       // required, unique
+  // password handled by passport-local-mongoose (hashed + salted)
 }
 ```
 
-### Campground Model
-```javascript
+### Campground
+```js
 {
-  title: String,
+  title:       String,
   description: String,
-  price: Number,
-  location: String,
+  price:       Number,
+  location:    String,
   geometry: {
-    type: 'Point',
-    coordinates: [longitude, latitude]
+    type:        'Point',
+    coordinates: [Number]  // [longitude, latitude]
   },
-  images: [
-    {
-      url: String,
-      filename: String,
-      thumbnail: String (virtual)
-    }
-  ],
-  author: ObjectId (ref: User),
-  reviews: [ObjectId] (ref: Review),
-  createdAt: Date (auto),
-  updatedAt: Date (auto)
+  images: [{
+    url:      String,
+    filename: String
+    // thumbnail: virtual field
+  }],
+  author:    ObjectId,   // ref: User
+  reviews:   [ObjectId], // ref: Review
+  timestamps: true
 }
 ```
 
-### Review Model
-```javascript
+### Review
+```js
 {
-  body: String,
-  rating: Number,
-  author: ObjectId (ref: User),
-  createdAt: Date (auto),
-  updatedAt: Date (auto)
+  body:      String,
+  rating:    Number,     // 1–5
+  author:    ObjectId,   // ref: User
+  timestamps: true
 }
 ```
 
-## Security Features
+---
 
-- Authentication: Passport.js with local strategy
-- Session Security: Sessions stored in MongoDB, httpOnly cookies
-- Input Validation: Joi schemas for campground and review validation
-- Data Sanitization: express-mongo-sanitize prevents NoSQL injection
-- Security Headers: Helmet.js sets CSP and other HTTP headers
-- Authorization Middleware: isLoggedIn, isAuthor, isReviewAuthor checks
-- Error Handling: Custom ExpressError class with proper HTTP status codes
-- CORS Configuration: Controlled cross-origin requests
+## 🔒 Security
 
-## Middleware
+- **Helmet.js** — Strict Content Security Policy (CSP) for scripts, styles, images, fonts
+- **express-mongo-sanitize** — Prevents NoSQL injection via query string manipulation
+- **sanitize-html** — Strips unsafe HTML from user input
+- **Passport.js** — Secure local authentication with hashed passwords
+- **httpOnly cookies** — Session cookies not accessible via JavaScript
+- **MongoDB session store** — Sessions persisted securely, not in memory
+- **Authorization middleware** — `isAuthor` / `isReviewAuthor` guards prevent unauthorized mutations
 
-- isLoggedIn: Ensures user is authenticated
-- isAuthor: Verifies user is the campground author
-- isReviewAuthor: Verifies user is the review author
-- validateCampground: Validates campground data with Joi schema
-- validateReview: Validates review data with Joi schema
-- storeReturnTo: Stores original URL for post-login redirect
+---
 
-## Error Handling
+## 🐳 Docker
 
-The application uses a centralized error handling approach:
+A `Dockerfile` is included for containerized deployment:
 
-- catchAsync: Wrapper for async route handlers to catch Promise rejections
-- ExpressError: Custom error class with statusCode and message
-- Global error handler: Express middleware catches and formats all errors
+```bash
+# Build the image
+docker build -t yelpcamp .
 
-## Getting Started Examples
+# Run the container
+docker run -p 3000:3000 --env-file .env yelpcamp
+```
 
-### Register a New User
-1. Navigate to http://localhost:3000/register
-2. Enter username, email, and password
-3. Click "Register" to create account
+---
 
-### Create a Campground
-1. Log in to your account
-2. Click "Add Campground" or navigate to /campgrounds/new
-3. Fill in campground details (title, description, price, location)
-4. Upload campground images
-5. Click "Create Campground" to submit
+## 👨‍💻 Author
 
-### Leave a Review
-1. Navigate to a campground
-2. Scroll to reviews section
-3. Enter review text and rating (1-5)
-4. Click "Submit Review"
+**Mayank Singh**
+- Portfolio: [mayank-developer.vercel.app](https://mayank-developer.vercel.app/)
+- GitHub: [@coderMayank69](https://github.com/coderMayank69)
 
-## Deployment
+---
 
-- Live App: https://yelpcamp-1-wcof.onrender.com/
+## 📄 License
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is open source and available under the ISC License.
-
-## Author
-
-Created by coderMayank69
-
-## Acknowledgments
-
-- Express.js documentation
-- Mongoose guides
-- Passport.js authentication
-- Cloudinary API
-- MapTiler maps
+This project is open source and available under the [ISC License](https://opensource.org/licenses/ISC).

@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://res.cloudinary.com/dgqgzmzed/image/upload/v1758799239/pngtree-camping-logo-design-vector-png-image_5284762_iedxjj.jpg" alt="YelpCamp Logo" width="120" style="border-radius: 16px;" />
+</p>
+
 # YelpCamp 🏕️
 
 > A full-stack campground listing and review platform — discover, share, and review campgrounds around the world.

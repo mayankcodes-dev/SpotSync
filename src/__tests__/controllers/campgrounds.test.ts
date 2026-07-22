@@ -155,7 +155,7 @@ describe('Campgrounds Controller', () => {
       await campgroundController.showCampground(req, res);
 
       expect(req.flash).toHaveBeenCalledWith('error', expect.any(String));
-      expect(res.redirect).toHaveBeenCalledWith('/campgrounds');
+      expect(res.redirect).toHaveBeenCalledWith('/spots');
     });
   });
 
@@ -169,7 +169,7 @@ describe('Campgrounds Controller', () => {
 
       expect(Campground.findByIdAndDelete).toHaveBeenCalledWith('camp123');
       expect(req.flash).toHaveBeenCalledWith('success', expect.any(String));
-      expect(res.redirect).toHaveBeenCalledWith('/campgrounds');
+      expect(res.redirect).toHaveBeenCalledWith('/spots');
     });
   });
 });

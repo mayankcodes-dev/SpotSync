@@ -4,11 +4,11 @@
   <div class="col-lg-8">
     <div class="card border-0 shadow-sm rounded-4">
       <div class="card-header bg-white border-bottom py-4 rounded-top-4">
-        <h2 class="h4 fw-bold mb-1">New campground</h2>
+        <h2 class="h4 fw-bold mb-1">Add a New Spot</h2>
         <p class="text-muted mb-0 small">Add photos, a location, and a description guests will love.</p>
       </div>
       <div class="card-body p-4">
-        <form action="/campgrounds" method="POST" novalidate class="form-validate" enctype="multipart/form-data">
+        <form action="/spots" method="POST" novalidate class="form-validate" enctype="multipart/form-data">
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label" for="title">Title</label>
@@ -41,7 +41,7 @@
             <div class="invalid-feedback">Please enter a description.</div>
           </div>
           <div class="mt-4 text-end">
-            <button class="btn btn-primary btn-lg px-5 rounded-3" type="submit">Create listing</button>
+            <button class="btn btn-primary btn-lg px-5 rounded-3" type="submit">Create Spot</button>
           </div>
         </form>
       </div>

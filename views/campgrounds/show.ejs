@@ -4,20 +4,20 @@
 <div class="row g-4">
   <div class="col-lg-7">
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-      <div id="campgroundCarousel" class="carousel slide">
+      <div id="spotCarousel" class="carousel slide">
         <div class="carousel-inner rounded-top">
           <% campground.images.forEach((img,i)=>{ %>
           <div class="carousel-item <%= i === 0 ? 'active' : '' %>">
-            <img crossorigin="anonymous" src="<%= img.url %>" class="d-block w-100 object-fit-cover" style="height: 360px;" alt="Campground image">
+            <img crossorigin="anonymous" src="<%= img.url %>" class="d-block w-100 object-fit-cover" style="height: 360px;" alt="Spot image">
           </div>
           <% }) %>
         </div>
         <% if (campground.images.length > 1) { %>
-        <button class="carousel-control-prev" type="button" data-bs-target="#campgroundCarousel" data-bs-slide="prev">
+        <button class="carousel-control-prev" type="button" data-bs-target="#spotCarousel" data-bs-slide="prev">
           <span class="carousel-control-prev-icon"></span>
           <span class="visually-hidden">Previous</span>
         </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#campgroundCarousel" data-bs-slide="next">
+        <button class="carousel-control-next" type="button" data-bs-target="#spotCarousel" data-bs-slide="next">
           <span class="carousel-control-next-icon"></span>
           <span class="visually-hidden">Next</span>
         </button>
@@ -48,9 +48,9 @@
         %>
         <% if (isAuthor) { %>
         <div class="d-flex flex-wrap gap-3">
-          <a class="btn btn-outline-primary rounded-3" href="/campgrounds/<%=campground._id%>/edit">Edit</a>
-          <form class="d-inline" action="/campgrounds/<%=campground._id%>?_method=DELETE" method="POST">
-            <button class="btn btn-outline-danger rounded-3" type="submit">Delete</button>
+          <a class="btn btn-outline-primary rounded-3" href="/spots/<%=campground._id%>/edit">Edit Spot</a>
+          <form class="d-inline" action="/spots/<%=campground._id%>?_method=DELETE" method="POST">
+            <button class="btn btn-outline-danger rounded-3" type="submit">Delete Spot</button>
           </form>
         </div>
         <% } %>
@@ -66,7 +66,7 @@
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
       <div class="card-body p-4">
         <h3 class="h5 mb-3">Leave a Review</h3>
-        <form action="/campgrounds/<%= campground._id %>/reviews" method="POST" class="form-validate" novalidate>
+        <form action="/spots/<%= campground._id %>/reviews" method="POST" class="form-validate" novalidate>
           <div class="mb-3">
             <fieldset class="starability-grow">
               <input type="radio" id="no-rate" class="input-no-rate" name="review[rating]" value="1" checked aria-label="No rating." />
@@ -83,11 +83,11 @@
             </fieldset>
           </div>
           <div class="mb-3">
-            <label class="form-label" for="body">Review</label>
+            <label class="form-label" for="body">Your Review</label>
             <textarea class="form-control" name="review[body]" id="body" rows="3" required></textarea>
             <div class="invalid-feedback">Please add your review.</div>
           </div>
-          <button class="btn btn-primary w-100" type="submit">Submit</button>
+          <button class="btn btn-primary w-100" type="submit">Submit Review</button>
         </form>
       </div>
     </div>
@@ -111,7 +111,7 @@
               const canDeleteReview = currentUser && reviewAuthorId && (reviewAuthorId.equals ? reviewAuthorId.equals(currentUser._id) : String(reviewAuthorId) === String(currentUser._id));
             %>
             <% if (canDeleteReview) { %>
-            <form action="/campgrounds/<%= campground._id %>/reviews/<%= review._id %>?_method=DELETE" method="POST">
+            <form action="/spots/<%= campground._id %>/reviews/<%= review._id %>?_method=DELETE" method="POST">
               <button class="btn btn-sm btn-outline-danger">Delete</button>
             </form>
             <% } %>

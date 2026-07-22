@@ -77,3 +77,6 @@ coverage/
 # Build artifacts
 *.tar.gz
 spotsync-build-*.tar.gz
+
+# AI agent working docs (not for version control)
+.ai/

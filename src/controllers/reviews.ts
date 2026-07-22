@@ -7,8 +7,8 @@ export const createReview = async (req: Request, res: Response): Promise<void> =
   const id = String(req.params.id);
   const campground = await Campground.findById(id);
   if (!campground) {
-    req.flash('error', 'Cannot find that campground!');
-    res.redirect('/campgrounds');
+    req.flash('error', 'Cannot find that spot!');
+    res.redirect('/spots');
     return;
   }
   const review = new Review(req.body.review);
@@ -21,7 +21,7 @@ export const createReview = async (req: Request, res: Response): Promise<void> =
   await deleteCache(CACHE_KEYS.campgroundById(id));
 
   req.flash('success', 'Created new review!');
-  res.redirect(`/campgrounds/${campground._id}`);
+  res.redirect(`/spots/${campground._id}`);
 };
 
 export const deleteReview = async (req: Request, res: Response): Promise<void> => {
@@ -34,5 +34,5 @@ export const deleteReview = async (req: Request, res: Response): Promise<void> =
   await deleteCache(CACHE_KEYS.campgroundById(id));
 
   req.flash('success', 'Successfully deleted review!');
-  res.redirect(`/campgrounds/${id}`);
+  res.redirect(`/spots/${id}`);
 };

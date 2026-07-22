@@ -1,7 +1,7 @@
 {
-  "name": "SpotSync – Discover Campgrounds",
+  "name": "SpotSync – Discover Camping Spots",
   "short_name": "SpotSync",
-  "description": "Find, review, and share the best campgrounds worldwide",
+  "description": "Find, review, and share the best camping spots worldwide",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

@@ -84,7 +84,7 @@ function createTestApp() {
 
   // Import routes
   const campgroundRoutes = require('../../routes/campgrounds').default;
-  app.use('/campgrounds', campgroundRoutes);
+  app.use('/spots', campgroundRoutes);
 
   // Error handler
   app.use((err: any, _req: any, res: any, _next: any) => {
@@ -120,11 +120,11 @@ describe('Campground Routes – Integration', () => {
     require('../../services/redis').getCached.mockResolvedValue(null);
   });
 
-  describe('GET /campgrounds', () => {
-    it('should return 200 for campground index', async () => {
+  describe('GET /spots', () => {
+    it('should return 200 for spots index', async () => {
       (Campground.find as jest.Mock).mockResolvedValue(mockCampgrounds);
 
-      const res = await request(app).get('/campgrounds');
+      const res = await request(app).get('/spots');
       expect(res.status).toBe(200);
     });
 
@@ -134,14 +134,14 @@ describe('Campground Routes – Integration', () => {
         campgroundsGeoJSON: { type: 'FeatureCollection', features: [] },
       });
 
-      const res = await request(app).get('/campgrounds');
+      const res = await request(app).get('/spots');
       expect(res.status).toBe(200);
       expect(Campground.find).not.toHaveBeenCalled();
     });
   });
 
-  describe('GET /campgrounds/:id', () => {
-    it('should return 200 for existing campground', async () => {
+  describe('GET /spots/:id', () => {
+    it('should return 200 for existing spot', async () => {
       const mockPopulate = {
         populate: jest.fn().mockResolvedValue({
           ...mockCampgrounds[0],
@@ -152,29 +152,29 @@ describe('Campground Routes – Integration', () => {
         populate: jest.fn().mockReturnValue(mockPopulate),
       });
 
-      const res = await request(app).get('/campgrounds/camp1');
+      const res = await request(app).get('/spots/camp1');
       expect(res.status).toBe(200);
     });
 
-    it('should redirect to /campgrounds when campground not found', async () => {
+    it('should redirect to /spots when spot not found', async () => {
       (Campground.findById as jest.Mock).mockReturnValue({
         populate: jest.fn().mockReturnValue({
           populate: jest.fn().mockResolvedValue(null),
         }),
       });
 
-      const res = await request(app).get('/campgrounds/nonexistent');
+      const res = await request(app).get('/spots/nonexistent');
       expect(res.status).toBe(302);
-      expect(res.headers.location).toBe('/campgrounds');
+      expect(res.headers.location).toBe('/spots');
     });
   });
 
-  describe('DELETE /campgrounds/:id', () => {
-    it('should delete campground and redirect', async () => {
+  describe('DELETE /spots/:id', () => {
+    it('should delete spot and redirect', async () => {
       (Campground.findByIdAndDelete as jest.Mock).mockResolvedValue({ _id: 'camp1' });
 
       const res = await request(app)
-        .delete('/campgrounds/camp1');
+        .delete('/spots/camp1');
 
       expect(res.status).toBe(302);
     });

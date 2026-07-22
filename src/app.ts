@@ -151,8 +151,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // ─── Routes ──────────────────────────────────────────────────────────────────
 app.use('/', userRoutes);
-app.use('/campgrounds', campgroundRoutes);
-app.use('/campgrounds/:id/reviews', reviewRoutes);
+app.use('/spots', campgroundRoutes);
+app.use('/spots/:id/reviews', reviewRoutes);
 
 app.get('/', (req: Request, res: Response) => {
   res.render('home', { activePage: 'home' });

@@ -44,7 +44,7 @@ export const index = async (req: Request, res: Response): Promise<void> => {
             _id: cg._id,
             title: cg.title,
             location: cg.location,
-            popUpMarkup: `<strong><a href="/campgrounds/${cg._id}">${cg.title}</a></strong><p>${snippet}</p>`,
+            popUpMarkup: `<strong><a href="/spots/${cg._id}">${cg.title}</a></strong><p>${snippet}</p>`,
           },
         };
       });
@@ -96,8 +96,8 @@ export const createCampground = async (req: Request, res: Response, next: NextFu
       );
 
       const reason = unsafeImages[0].reason || 'Image failed content moderation.';
-      req.flash('error', `Image rejected: ${reason} Please upload a relevant campground/nature photo.`);
-      res.redirect('/campgrounds/new');
+      req.flash('error', `Image rejected: ${reason} Please upload a relevant camping/nature photo.`);
+      res.redirect('/spots/new');
       return;
     }
   }
@@ -113,13 +113,13 @@ export const createCampground = async (req: Request, res: Response, next: NextFu
       } else {
         req.flash('error', 'Location could not be found. Please try a different location.');
         await Promise.all(uploadedImages.map((img) => cloudinary.uploader.destroy(img.filename)));
-        res.redirect('/campgrounds/new');
+        res.redirect('/spots/new');
         return;
       }
     } catch (err) {
       req.flash('error', 'Geocoding service error. Please try again later.');
       await Promise.all(uploadedImages.map((img) => cloudinary.uploader.destroy(img.filename)));
-      res.redirect('/campgrounds/new');
+      res.redirect('/spots/new');
       return;
     }
   }
@@ -131,8 +131,8 @@ export const createCampground = async (req: Request, res: Response, next: NextFu
   // Invalidate cache
   await deleteCache(CACHE_KEYS.campgroundsAll);
 
-  req.flash('success', 'Successfully made a new campground!');
-  res.redirect(`/campgrounds/${campground._id}`);
+  req.flash('success', 'Successfully created a new spot!');
+  res.redirect(`/spots/${campground._id}`);
 };
 
 // ─── SHOW ─────────────────────────────────────────────────────────────────────
@@ -152,8 +152,8 @@ export const showCampground = async (req: Request, res: Response): Promise<void>
     .populate('author');
 
   if (!campground) {
-    req.flash('error', 'Cannot find that campground!');
-    res.redirect('/campgrounds');
+    req.flash('error', 'Cannot find that spot!');
+    res.redirect('/spots');
     return;
   }
 
@@ -167,8 +167,8 @@ export const showCampground = async (req: Request, res: Response): Promise<void>
 export const renderEditForm = async (req: Request, res: Response): Promise<void> => {
   const campground = await Campground.findById(req.params.id);
   if (!campground) {
-    req.flash('error', 'Cannot find that campground!');
-    res.redirect('/campgrounds');
+    req.flash('error', 'Cannot find that spot!');
+    res.redirect('/spots');
     return;
   }
   res.render('campgrounds/edit', { campground, activePage: 'campgrounds' });
@@ -180,8 +180,8 @@ export const updateCampground = async (req: Request, res: Response): Promise<voi
   const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground }, { new: true });
 
   if (!campground) {
-    req.flash('error', 'Cannot find that campground!');
-    res.redirect('/campgrounds');
+    req.flash('error', 'Cannot find that spot!');
+    res.redirect('/spots');
     return;
   }
 
@@ -192,12 +192,12 @@ export const updateCampground = async (req: Request, res: Response): Promise<voi
       campground.geometry = geoData.features[0].geometry as any;
     } else {
       req.flash('error', 'Location could not be found. Please try a different location.');
-      res.redirect(`/campgrounds/${id}/edit`);
+      res.redirect(`/spots/${id}/edit`);
       return;
     }
   } catch (err) {
     req.flash('error', 'Geocoding service error. Please try again later.');
-    res.redirect(`/campgrounds/${id}/edit`);
+    res.redirect(`/spots/${id}/edit`);
     return;
   }
 
@@ -217,8 +217,8 @@ export const updateCampground = async (req: Request, res: Response): Promise<voi
   await deleteCache(CACHE_KEYS.campgroundById(id));
   await deleteCache(CACHE_KEYS.campgroundsAll);
 
-  req.flash('success', 'Successfully updated campground!');
-  res.redirect(`/campgrounds/${id}`);
+  req.flash('success', 'Successfully updated spot!');
+  res.redirect(`/spots/${id}`);
 };
 
 // ─── DELETE ──────────────────────────────────────────────────────────────────
@@ -230,6 +230,6 @@ export const deleteCampground = async (req: Request, res: Response): Promise<voi
   await deleteCache(CACHE_KEYS.campgroundById(id));
   await deleteCache(CACHE_KEYS.campgroundsAll);
 
-  req.flash('success', 'Successfully deleted campground!');
-  res.redirect('/campgrounds');
+  req.flash('success', 'Successfully deleted spot!');
+  res.redirect('/spots');
 };

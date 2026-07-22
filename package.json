@@ -16,10 +16,16 @@
     "test:coverage": "jest --coverage --forceExit",
     "lint": "tsc --noEmit"
   },
-  "keywords": ["camping", "travel", "spots", "reviews"],
+  "keywords": [
+    "camping",
+    "travel",
+    "spots",
+    "reviews"
+  ],
   "author": "SpotSync Dev Team",
   "license": "ISC",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@maptiler/client": "^1.8.1",
     "@maptiler/sdk": "^3.8.0",
     "@upstash/ratelimit": "^2.0.5",
@@ -33,7 +39,6 @@
     "express": "^5.1.0",
     "express-mongo-sanitize": "^2.2.0",
     "express-session": "^1.18.2",
-    "groq-sdk": "^0.26.0",
     "helmet": "^8.1.0",
     "joi": "^18.0.1",
     "method-override": "^3.0.0",

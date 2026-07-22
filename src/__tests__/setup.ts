@@ -2,7 +2,7 @@
 // Sets all required environment variables so modules can be imported without throwing
 
 process.env.NODE_ENV = 'test';
-process.env.GROQ_API_KEY = 'test-groq-api-key';
+process.env.GEMINI_API_KEY = 'test-gemini-api-key';
 process.env.UPSTASH_REDIS_REST_URL = 'https://fake-upstash.upstash.io';
 process.env.UPSTASH_REDIS_REST_TOKEN = 'fake-upstash-token';
 process.env.CLOUDINARY_CLOUD_NAME = 'test-cloud';

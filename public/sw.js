@@ -1,12 +1,11 @@
-// SpotSync Service Worker v1.0.0
-const CACHE_NAME = 'spotsync-v1';
-const STATIC_CACHE = 'spotsync-static-v1';
-const DYNAMIC_CACHE = 'spotsync-dynamic-v1';
+// SpotSync Service Worker v2.0.0
+const STATIC_CACHE  = 'spotsync-static-v2';
+const DYNAMIC_CACHE = 'spotsync-dynamic-v2';
 
-// Assets to pre-cache on install
+// Assets to pre-cache on SW install
 const STATIC_ASSETS = [
   '/',
-  '/campgrounds',
+  '/spots',
   '/stylesheets/app.css',
   '/stylesheets/stars.css',
   '/javascripts/validateForms.js',
@@ -16,110 +15,97 @@ const STATIC_ASSETS = [
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
-  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css',
-  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js',
-  'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css',
-  'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap',
 ];
 
-// ─── Install Event ──────────────────────────────────────────────────────────
+// ─── Install ──────────────────────────────────────────────────────────────────
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing SpotSync Service Worker...');
+  console.log('[SW] Installing v2...');
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => {
-      console.log('[SW] Pre-caching static assets');
-      // Use addAll with individual error handling to avoid total failure
-      return Promise.allSettled(
+    caches.open(STATIC_CACHE).then((cache) =>
+      Promise.allSettled(
         STATIC_ASSETS.map((url) =>
-          cache.add(url).catch((err) => console.warn(`[SW] Failed to cache ${url}:`, err))
+          cache.add(url).catch((err) => console.warn('[SW] Cache miss:', url, err))
         )
-      );
-    })
+      )
+    )
   );
-  self.skipWaiting();
+  self.skipWaiting(); // Activate immediately
 });
 
-// ─── Activate Event ─────────────────────────────────────────────────────────
+// ─── Activate ─────────────────────────────────────────────────────────────────
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating SpotSync Service Worker...');
+  console.log('[SW] Activating v2...');
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((name) => name !== STATIC_CACHE && name !== DYNAMIC_CACHE)
-          .map((name) => {
-            console.log('[SW] Deleting old cache:', name);
-            return caches.delete(name);
+    caches.keys().then((names) =>
+      Promise.all(
+        names
+          .filter((n) => n !== STATIC_CACHE && n !== DYNAMIC_CACHE)
+          .map((n) => {
+            console.log('[SW] Deleting old cache:', n);
+            return caches.delete(n);
           })
-      );
-    })
+      )
+    )
   );
-  return self.clients.claim();
+  self.clients.claim();
 });
 
-// ─── Fetch Event ─────────────────────────────────────────────────────────────
+// ─── Fetch ────────────────────────────────────────────────────────────────────
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET requests (POST, PUT, DELETE — let these go to server)
+  // Only handle GET over http(s)
   if (request.method !== 'GET') return;
-
-  // Skip chrome-extension and other non-http requests
   if (!url.protocol.startsWith('http')) return;
 
-  // Skip API and form submission paths
-  const skipPaths = ['/login', '/register', '/logout'];
-  if (skipPaths.some((p) => url.pathname === p)) return;
+  // Never intercept auth/form routes
+  if (['/login', '/register', '/logout'].includes(url.pathname)) return;
 
-  // Strategy: Cache-First for static assets, Network-First for HTML pages
-  if (
+  const isStatic =
     url.pathname.startsWith('/stylesheets/') ||
     url.pathname.startsWith('/javascripts/') ||
     url.pathname.startsWith('/icons/') ||
     url.pathname === '/manifest.json' ||
     url.hostname.includes('jsdelivr.net') ||
     url.hostname.includes('fonts.googleapis.com') ||
-    url.hostname.includes('fonts.gstatic.com') ||
-    url.hostname.includes('bootstrapcdn.com')
-  ) {
-    // Cache-First
+    url.hostname.includes('fonts.gstatic.com');
+
+  const isHTML = request.headers.get('accept')?.includes('text/html');
+
+  if (isStatic) {
+    // Cache-First: serve from cache, fall back to network and update cache
     event.respondWith(
       caches.match(request).then((cached) => {
         if (cached) return cached;
-        return fetch(request).then((response) => {
-          if (!response || response.status !== 200 || response.type === 'error') {
-            return response;
+        return fetch(request).then((resp) => {
+          if (resp && resp.status === 200) {
+            caches.open(STATIC_CACHE).then((c) => c.put(request, resp.clone()));
           }
-          const cloned = response.clone();
-          caches.open(STATIC_CACHE).then((cache) => cache.put(request, cloned));
-          return response;
+          return resp;
         });
       })
     );
-  } else if (request.headers.get('accept')?.includes('text/html')) {
-    // Network-First for HTML (always fresh from server, fallback to cache)
+  } else if (isHTML) {
+    // Network-First: always try network, cache result, fallback to cached
     event.respondWith(
       fetch(request)
-        .then((response) => {
-          const cloned = response.clone();
-          caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, cloned));
-          return response;
+        .then((resp) => {
+          if (resp && resp.status === 200) {
+            caches.open(DYNAMIC_CACHE).then((c) => c.put(request, resp.clone()));
+          }
+          return resp;
         })
-        .catch(() => {
-          return caches.match(request).then((cached) => {
-            if (cached) return cached;
-            // Offline fallback
-            return caches.match('/');
-          });
-        })
+        .catch(() =>
+          caches.match(request).then((cached) => cached || caches.match('/'))
+        )
     );
   }
 });
 
-// ─── Push Notifications (placeholder) ───────────────────────────────────────
+// ─── Push Notifications ───────────────────────────────────────────────────────
 self.addEventListener('push', (event) => {
-  const data = event.data?.json() || { title: 'SpotSync', body: 'New campground added!' };
+  const data = event.data?.json() || { title: 'SpotSync', body: 'New spot added nearby!' };
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,

@@ -65,3 +65,15 @@ jspm_packages/
 # Files that might appear in the root of a volume
 .Spotlight-V100
 .Trashes
+
+# TypeScript build output
+dist/
+*.js.map
+*.d.ts.map
+
+# Jest coverage
+coverage/
+
+# Build artifacts
+*.tar.gz
+spotsync-build-*.tar.gz

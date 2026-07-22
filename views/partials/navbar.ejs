@@ -2,8 +2,8 @@
   <div class="container">
     <% const page = typeof activePage !== 'undefined' ? activePage : ''; %>
     <a class="navbar-brand d-flex align-items-center gap-2" href="/">
-      <img src="https://res.cloudinary.com/dgqgzmzed/image/upload/v1758799239/pngtree-camping-logo-design-vector-png-image_5284762_iedxjj.jpg" alt="YelpCamp" width="32" height="32" class="rounded-circle border" style="border-color: var(--yc-border) !important;">
-      <span>YelpCamp</span>
+      <img src="https://res.cloudinary.com/dgqgzmzed/image/upload/v1758799239/pngtree-camping-logo-design-vector-png-image_5284762_iedxjj.jpg" alt="SpotSync" width="32" height="32" class="rounded-circle border" style="border-color: var(--yc-border) !important;">
+      <span>SpotSync</span>
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -36,6 +36,13 @@
             <a class="btn btn-outline-primary btn-sm px-3 rounded-pill" href="/logout">Logout</a>
           </li>
         <% } %>
+        <!-- PWA Install Button -->
+        <li class="nav-item" id="pwa-install-li" style="display:none;">
+          <button id="pwa-install-btn" class="btn btn-success btn-sm px-3 rounded-pill d-flex align-items-center gap-1" title="Install SpotSync App">
+            <i class="bi bi-download"></i>
+            <span class="d-none d-md-inline">Install App</span>
+          </button>
+        </li>
       </ul>
     </div>
   </div>

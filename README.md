@@ -1,143 +1,45 @@
-<p align="center">
-  <img src="https://res.cloudinary.com/dgqgzmzed/image/upload/v1758799239/pngtree-camping-logo-design-vector-png-image_5284762_iedxjj.jpg" alt="YelpCamp Logo" width="120" style="border-radius: 16px;" />
-</p>
+# 🏕️ SpotSync
 
-# YelpCamp 🏕️
+**SpotSync** is a full-stack campground discovery and review platform — find, share, and explore amazing camping spots worldwide.
 
-> A full-stack campground listing and review platform — discover, share, and review campgrounds around the world.
-
-![Node.js](https://img.shields.io/badge/Node.js-v18%2B-339933?logo=node.js&logoColor=white)
-![Express](https://img.shields.io/badge/Express-v5-000000?logo=express&logoColor=white)
-![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white)
-![Bootstrap](https://img.shields.io/badge/Bootstrap-5-7952B3?logo=bootstrap&logoColor=white)
-![License](https://img.shields.io/badge/License-ISC-blue)
-![Live](https://img.shields.io/badge/Live-Render-46E3B7?logo=render&logoColor=white)
-
-**Live Demo →** [https://yelpcamp-1-wcof.onrender.com](https://yelpcamp-1-wcof.onrender.com)
-
----
-
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [Environment Variables](#environment-variables)
-- [API Routes](#api-routes)
-- [Database Models](#database-models)
-- [Security](#security)
-- [Docker](#docker)
-- [Author](#author)
-
----
-
-## Overview
-
-YelpCamp is a full-stack web application inspired by Yelp, built specifically for campgrounds. Users can browse campgrounds on an interactive map, create their own listings with photo uploads, and leave star-rated reviews. The project demonstrates real-world patterns including authentication, authorization, cloud storage, geolocation, and secure session management.
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18-green?logo=node.js)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-5.x-lightgrey?logo=express)](https://expressjs.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green?logo=mongodb)](https://www.mongodb.com/)
+[![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple?logo=bootstrap)](https://getbootstrap.com/)
+[![PWA](https://img.shields.io/badge/PWA-Ready-orange?logo=googlechrome)](https://web.dev/progressive-web-apps/)
+[![License](https://img.shields.io/badge/license-ISC-blue)](LICENSE)
 
 ---
 
 ## ✨ Features
 
 | Feature | Description |
-|---|---|
-| 🔐 Authentication | Register, login, logout via Passport.js local strategy |
-| 🏕️ Campground CRUD | Create, view, edit, and delete campground listings |
-| 🖼️ Image Uploads | Multi-image upload via Multer + Cloudinary |
-| ⭐ Reviews & Ratings | Star-rated reviews with author-only delete |
-| 🗺️ Interactive Maps | MapTiler SDK for geolocation and map display |
-| 🔒 Authorization | Author-only edit/delete for campgrounds and reviews |
-| 🛡️ Security | Helmet CSP headers, NoSQL injection prevention, input sanitization |
-| 📦 Session Store | Persistent sessions stored in MongoDB via connect-mongo |
-| ✅ Validation | Server-side validation using Joi schemas |
-| 📱 Responsive UI | Mobile-friendly Bootstrap 5 layout |
+|---------|-------------|
+| 🗺️ **3D Terrain Maps** | MapTiler SDK with satellite imagery, 65° pitch, terrain exaggeration |
+| 🤖 **AI Image Moderation** | Groq `llama-3.2-11b-vision-preview` validates every uploaded image |
+| ⚡ **Redis Caching** | Upstash Redis caches campground lists & details (5-min TTL) |
+| 🛡️ **Rate Limiting** | IP-based sliding window limits on auth & campground creation |
+| 📱 **Progressive Web App** | Installable, offline-capable, service worker, home screen icon |
+| 🔐 **Auth** | Passport.js local strategy with secure session management |
+| ☁️ **Cloud Storage** | Cloudinary for image upload, optimization & deletion |
+| 🧪 **Tests** | Jest + ts-jest unit tests & Supertest integration tests |
+| 🔄 **CI/CD** | Jenkins declarative pipeline (install → test → build → deploy) |
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Backend
-- **Node.js** (v18+) — JavaScript runtime
-- **Express.js** (v5) — Web framework
-- **MongoDB** + **Mongoose** (v8) — Database & ODM
-
-### Authentication & Security
-- **Passport.js** — Authentication middleware (local strategy)
-- **passport-local-mongoose** — Mongoose plugin for auth
-- **Helmet** (v8) — HTTP security headers & CSP
-- **express-mongo-sanitize** — NoSQL injection prevention
-- **sanitize-html** — HTML input sanitization
-
-### Storage & Media
-- **Cloudinary** — Cloud image storage
-- **Multer** + **multer-storage-cloudinary** — File upload handling
-
-### Frontend & Templating
-- **EJS** + **ejs-mate** — Server-side templating with layouts
-- **Bootstrap 5** — Responsive UI components
-- **Font Awesome** — Icons
-
-### Maps & Geolocation
-- **@maptiler/sdk** — Interactive map rendering
-- **@maptiler/client** — Geocoding API client
-
-### Session & Messaging
-- **express-session** — Session middleware
-- **connect-mongo** — MongoDB-backed session store
-- **connect-flash** — Flash messages
-
-### Utilities
-- **dotenv** — Environment variable management
-- **method-override** — RESTful HTTP method support (PUT/DELETE via forms)
-- **Joi** — Schema validation
-
----
-
-## 📁 Project Structure
-
-```
-YELPCAMP/
-├── app.js                    # Entry point — Express setup, middleware, routes
-├── middleware.js             # isLoggedIn, isAuthor, validateCampground, etc.
-├── schemas.js                # Joi validation schemas
-├── Dockerfile                # Docker container configuration
-├── controllers/
-│   ├── campgrounds.js        # Campground CRUD logic
-│   ├── reviews.js            # Review create/delete logic
-│   └── users.js              # Register, login, logout logic
-├── routes/
-│   ├── campgrounds.js        # /campgrounds routes
-│   ├── reviews.js            # /campgrounds/:id/reviews routes
-│   └── users.js              # /register, /login, /logout routes
-├── models/
-│   ├── campground.js         # Campground schema (with geospatial support)
-│   ├── review.js             # Review schema
-│   └── user.js               # User schema (passport-local-mongoose)
-├── cloudinary/
-│   └── index.js              # Cloudinary + multer storage config
-├── utils/
-│   ├── catchAsync.js         # Async error handler wrapper
-│   ├── ExpressError.js       # Custom error class
-│   └── mongoSanitizeV5.js   # Custom sanitization middleware
-├── views/
-│   ├── layouts/
-│   │   └── boilerplate.ejs   # Base layout template
-│   ├── partials/
-│   │   ├── navbar.ejs
-│   │   └── footer.ejs
-│   ├── campgrounds/          # Campground views (index, show, new, edit)
-│   ├── users/                # Login & register views
-│   ├── home.ejs
-│   └── error.ejs
-├── public/
-│   ├── stylesheets/          # Custom CSS
-│   └── javascripts/          # Client-side JS (map scripts, etc.)
-├── seeds/                    # Database seeding scripts
-├── package.json
-└── .env                      # Environment variables (not committed)
-```
+**Backend:** Node.js · TypeScript · Express 5 · Mongoose 8  
+**Frontend:** EJS + ejs-mate · Bootstrap 5.3 · Bootstrap Icons  
+**Database:** MongoDB Atlas  
+**Cache / Rate Limit:** Upstash Redis  
+**AI:** Groq SDK (`llama-3.2-11b-vision-preview`)  
+**Maps:** MapTiler SDK v2 (3D terrain, satellite, cluster)  
+**Auth:** Passport.js · express-session · connect-mongo  
+**Storage:** Cloudinary  
+**Security:** Helmet (CSP) · express-mongo-sanitize · Joi + sanitize-html  
+**Testing:** Jest · ts-jest · Supertest  
 
 ---
 
@@ -145,180 +47,259 @@ YELPCAMP/
 
 ### Prerequisites
 
-- Node.js **v18+**
-- MongoDB (local) or a [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) cluster
-- [Cloudinary](https://cloudinary.com/) account
-- [MapTiler](https://www.maptiler.com/) account
+- Node.js ≥ 18
+- npm ≥ 9
+- MongoDB Atlas account (or local MongoDB)
+- Cloudinary account
+- MapTiler account
+- Groq account (free tier works)
+- Upstash account (free tier works)
 
 ### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/coderMayank69/YELPCAMP.git
-   cd YELPCAMP
-   ```
+```bash
+# 1. Clone the repo
+git clone https://github.com/mayankcodes-dev/SpotSync.git
+cd SpotSync
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+# 2. Install dependencies
+npm install
 
-3. **Set up environment variables** (see [Environment Variables](#environment-variables))
+# 3. Set up environment variables
+cp .env.example .env
+# → Edit .env with your credentials
 
-4. **Run in development mode**
-   ```bash
-   npm run dev
-   ```
+# 4. Run in development mode
+npm run dev
+```
 
-5. **Or run in production mode**
-   ```bash
-   npm start
-   ```
+### Build for Production
 
-The app will be available at **http://localhost:3000**
+```bash
+# Compile TypeScript
+npm run build
+
+# Start production server
+npm start
+```
+
+### Run Tests
+
+```bash
+# All tests
+npm test
+
+# With coverage report
+npm run test:coverage
+```
 
 ---
 
-## ⚙️ Environment Variables
+## 📁 Project Structure
 
-Create a `.env` file in the project root:
+```
+SpotSync/
+├── src/                    # TypeScript source → compiles to dist/
+│   ├── app.ts              # Express entry point
+│   ├── controllers/        # Route handlers (campgrounds, users, reviews)
+│   ├── routes/             # Express routers
+│   ├── models/             # Mongoose models
+│   ├── middleware/         # Rate limiting
+│   ├── middleware.ts       # Auth, validation, authorization
+│   ├── services/
+│   │   ├── groqModeration.ts   # 🤖 AI image safety check
+│   │   └── redis.ts            # ⚡ Cache + rate limit helpers
+│   ├── cloudinary/         # Cloudinary config + Multer storage
+│   ├── schemas.ts          # Joi validation schemas
+│   ├── utils/              # ExpressError, catchAsync, mongoSanitize
+│   ├── types/              # TypeScript type declarations
+│   └── __tests__/          # Jest tests (unit + integration)
+├── views/                  # EJS templates
+│   ├── layouts/            # ejs-mate boilerplate layout
+│   ├── partials/           # navbar, footer, flash
+│   ├── campgrounds/        # index, show, new, edit
+│   └── users/              # login, register
+├── public/                 # Static assets
+│   ├── javascripts/
+│   │   ├── clusterMap.js   # 3D OUTDOOR cluster map
+│   │   ├── showPageMap.js  # 3D SATELLITE show-page map
+│   │   └── pwa.js          # PWA install button logic
+│   ├── stylesheets/        # Custom CSS
+│   ├── icons/              # PWA icons (72–512px)
+│   ├── manifest.json       # 📱 PWA Web App Manifest
+│   └── sw.js               # 🔧 Service Worker
+├── tsconfig.json           # TypeScript config
+├── jest.config.ts          # Jest + ts-jest config
+├── Jenkinsfile             # CI/CD pipeline
+├── Dockerfile              # Container definition
+└── .env.example            # Environment variable template
+```
+
+---
+
+## 🌍 Environment Variables
+
+Copy `.env.example` to `.env` and fill in:
 
 ```env
-# App
-NODE_ENV=development
-PORT=3000
-
-# Database
-DB_URL=mongodb://localhost:27017/yelp-camp
+# MongoDB
+DB_URL=mongodb+srv://user:pass@cluster.mongodb.net/spotsync
 
 # Session
-SECRET=your_strong_session_secret
+SECRET=your-long-random-secret
 
 # Cloudinary
 CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
+CLOUDINARY_KEY=your_api_key
+CLOUDINARY_SECRET=your_api_secret
 
-# MapTiler
-MAPTILER_API_KEY=your_maptiler_api_key
+# MapTiler (maps)
+MAPTILER_API_KEY=your_maptiler_key
+
+# Groq (AI moderation)
+GROQ_API_KEY=your_groq_api_key
+
+# Upstash Redis (caching + rate limiting)
+UPSTASH_REDIS_REST_URL=https://your-instance.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your_upstash_token
+
+PORT=3000
+NODE_ENV=development
 ```
-
-> ⚠️ Never commit your `.env` file. It is already listed in `.gitignore`.
 
 ---
 
-## 🔌 API Routes
+## 🤖 Groq AI Image Moderation
 
-### Authentication
+Every image uploaded to a campground is automatically scanned by Groq's vision model before being saved:
 
-| Method | Route | Description | Auth Required |
-|--------|-------|-------------|---------------|
-| GET | `/register` | Registration form | No |
-| POST | `/register` | Create new user | No |
-| GET | `/login` | Login form | No |
-| POST | `/login` | Authenticate user | No |
-| GET | `/logout` | Logout current user | Yes |
+```typescript
+// src/services/groqModeration.ts
+const result = await moderateImage(imageUrl);
+// returns: { isSafe: boolean, reason: string }
+```
 
-### Campgrounds
-
-| Method | Route | Description | Auth Required |
-|--------|-------|-------------|---------------|
-| GET | `/campgrounds` | All campgrounds | No |
-| GET | `/campgrounds/new` | New campground form | Yes |
-| POST | `/campgrounds` | Create campground | Yes |
-| GET | `/campgrounds/:id` | Campground details | No |
-| GET | `/campgrounds/:id/edit` | Edit form | Yes (author only) |
-| PUT | `/campgrounds/:id` | Update campground | Yes (author only) |
-| DELETE | `/campgrounds/:id` | Delete campground | Yes (author only) |
-
-### Reviews
-
-| Method | Route | Description | Auth Required |
-|--------|-------|-------------|---------------|
-| POST | `/campgrounds/:id/reviews` | Add a review | Yes |
-| DELETE | `/campgrounds/:id/reviews/:reviewId` | Delete a review | Yes (author only) |
+- ✅ **Safe & relevant** → Image saved, campground created
+- ❌ **Unsafe or irrelevant** → Image deleted from Cloudinary, flash error shown
+- ⚠️ **API unavailable** → Fails open (image accepted)
 
 ---
 
-## 🗃️ Database Models
+## ⚡ Redis Caching & Rate Limiting
 
-### User
-```js
-{
-  username: String,       // unique
-  email:    String,       // required, unique
-  // password handled by passport-local-mongoose (hashed + salted)
-}
+**Caching** (Upstash Redis, 5-minute TTL):
+- `GET /campgrounds` → cached as `spotsync:campgrounds:all`
+- `GET /campgrounds/:id` → cached as `spotsync:campground:{id}`
+- Cache invalidated on create / update / delete
+
+**Rate Limiting** (sliding window):
+- Auth routes (`/login`, `/register`) → 10 requests/minute per IP
+- Campground creation → 5 requests/minute per IP
+- Exceeds limit → flash error + redirect
+
+---
+
+## 🗺️ 3D Maps
+
+### Show Page (per campground)
+- **Style:** `SATELLITE` (aerial imagery)
+- **Pitch:** 65° (dramatic tilt)
+- **Bearing:** -30° (rotated)
+- **Terrain:** raster-DEM with 1.5× exaggeration
+- **Controls:** NavigationControl + TerrainControl
+
+### Index Page (all campgrounds)
+- **Style:** `OUTDOOR` (topographic)
+- **Clustering:** Color-coded cluster circles
+- **Terrain:** 1.2× exaggeration
+- **Controls:** NavigationControl + pitch indicator
+
+---
+
+## 📱 Progressive Web App
+
+SpotSync is installable as a native app:
+
+1. Visit the site in Chrome or Edge
+2. Click the **"Install App"** button (appears in navbar automatically)
+3. Accept the install prompt
+4. Launch SpotSync directly from your home screen
+
+**Service Worker Strategy:**
+- Static assets (CSS/JS/fonts) → **Cache-First**
+- HTML pages → **Network-First** with offline fallback
+- Form submissions (POST/PUT/DELETE) → **Network only**
+
+---
+
+## 🧪 Testing
+
+```bash
+npm test                   # Run all tests
+npm run test:coverage      # With coverage report
 ```
 
-### Campground
-```js
-{
-  title:       String,
-  description: String,
-  price:       Number,
-  location:    String,
-  geometry: {
-    type:        'Point',
-    coordinates: [Number]  // [longitude, latitude]
-  },
-  images: [{
-    url:      String,
-    filename: String
-    // thumbnail: virtual field
-  }],
-  author:    ObjectId,   // ref: User
-  reviews:   [ObjectId], // ref: Review
-  timestamps: true
-}
-```
+Test coverage includes:
+- `groqModeration.test.ts` — Unit tests for AI moderation service
+- `campgrounds.test.ts` — Unit tests for campground controller
+- `users.test.ts` — Unit tests for auth controller
+- `campgrounds.integration.test.ts` — HTTP integration tests via Supertest
 
-### Review
-```js
-{
-  body:      String,
-  rating:    Number,     // 1–5
-  author:    ObjectId,   // ref: User
-  timestamps: true
-}
-```
+All external services (Groq, Redis, Cloudinary, MongoDB) are mocked in tests.
+
+---
+
+## 🔄 CI/CD (Jenkins)
+
+The `Jenkinsfile` defines an 8-stage pipeline:
+
+| Stage | Action |
+|-------|--------|
+| Checkout | `git checkout` |
+| Setup Node | Verify Node version |
+| Install | `npm ci` |
+| Type Check | `npm run lint` (tsc --noEmit) |
+| Test | `npm test` (Jest) |
+| Build | `npm run build` (tsc) |
+| Copy Assets | Copy `views/` and `public/` to `dist/` |
+| Archive | Create `.tar.gz` build artifact |
+| Deploy (main) | Configurable: PM2 / Docker |
 
 ---
 
 ## 🔒 Security
 
-- **Helmet.js** — Strict Content Security Policy (CSP) for scripts, styles, images, fonts
-- **express-mongo-sanitize** — Prevents NoSQL injection via query string manipulation
-- **sanitize-html** — Strips unsafe HTML from user input
-- **Passport.js** — Secure local authentication with hashed passwords
-- **httpOnly cookies** — Session cookies not accessible via JavaScript
-- **MongoDB session store** — Sessions persisted securely, not in memory
-- **Authorization middleware** — `isAuthor` / `isReviewAuthor` guards prevent unauthorized mutations
+- **Helmet CSP** — strict Content-Security-Policy headers
+- **express-mongo-sanitize** — prevents NoSQL injection
+- **Joi + sanitize-html** — input validation + XSS prevention
+- **Session** — httpOnly cookie, 7-day expiry, MongoDB store
+- **Passport** — hashed passwords via passport-local-mongoose
+- **Rate limiting** — prevents brute force on auth endpoints
 
 ---
 
 ## 🐳 Docker
 
-A `Dockerfile` is included for containerized deployment:
-
 ```bash
-# Build the image
-docker build -t yelpcamp .
+# Build image
+docker build -t spotsync .
 
-# Run the container
-docker run -p 3000:3000 --env-file .env yelpcamp
+# Run container
+docker run -p 3000:3000 --env-file .env spotsync
 ```
 
 ---
 
-## 👨‍💻 Author
+## 📝 License
 
-**Mayank Singh**
-- Portfolio: [mayank-developer.vercel.app](https://mayank-developer.vercel.app/)
-- GitHub: [@coderMayank69](https://github.com/coderMayank69)
+ISC © [Mayank Singh](https://mayank-developer.vercel.app/)
 
 ---
 
-## 📄 License
+## 🙏 Acknowledgements
 
-This project is open source and available under the [ISC License](https://opensource.org/licenses/ISC).
+- [Colt Steele's YelpCamp](https://www.udemy.com/course/the-web-developer-bootcamp/) — original project inspiration
+- [MapTiler](https://www.maptiler.com/) — beautiful 3D maps
+- [Groq](https://groq.com/) — blazing-fast vision AI
+- [Upstash](https://upstash.com/) — serverless Redis
+- [Cloudinary](https://cloudinary.com/) — media management

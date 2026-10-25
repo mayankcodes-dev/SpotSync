@@ -66,11 +66,11 @@ const sessionConfig: session.SessionOptions = {
   name: 'spotsync.sid',
   secret: process.env.SECRET || 'spotsync-secret-changeme',
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-    maxAge: 1000 * 60 * 60 * 24 * 7,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
   },
 };
 

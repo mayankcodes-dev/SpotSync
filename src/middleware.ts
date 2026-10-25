@@ -39,13 +39,13 @@ export const isAuthor = async (req: Request, res: Response, next: NextFunction):
   const { id } = req.params;
   const campground = await Campground.findById(id);
   if (!campground) {
-    req.flash('error', 'Cannot find that campground!');
-    res.redirect('/campgrounds');
+    req.flash('error', 'Cannot find that spot!');
+    res.redirect('/spots');
     return;
   }
   if (!campground.author.equals((req.user as any)._id)) {
     req.flash('error', 'You do not have permission to do that!');
-    res.redirect(`/campgrounds/${campground._id}`);
+    res.redirect(`/spots/${campground._id}`);
     return;
   }
   next();
@@ -68,12 +68,12 @@ export const isReviewAuthor = async (req: Request, res: Response, next: NextFunc
   const review = await Review.findById(reviewID);
   if (!review) {
     req.flash('error', 'Cannot find that review!');
-    res.redirect(`/campgrounds/${id}`);
+    res.redirect(`/spots/${id}`);
     return;
   }
   if (!review.author.equals((req.user as any)._id)) {
     req.flash('error', 'You do not have permission to do that!');
-    res.redirect(`/campgrounds/${id}`);
+    res.redirect(`/spots/${id}`);
     return;
   }
   next();

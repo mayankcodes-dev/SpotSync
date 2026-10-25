@@ -14,7 +14,7 @@ jest.mock('@google/generative-ai', () => ({
   get GoogleGenerativeAI() { return mockGoogleGenerativeAI; },
 }));
 
-import { moderateImage } from '../../services/groqModeration';
+import { moderateImage } from '../../services/geminiModeration';
 
 // Helper: build the Gemini response shape
 const geminiResponse = (text: string) => ({

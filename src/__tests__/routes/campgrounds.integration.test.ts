@@ -1,6 +1,6 @@
 /**
  * Integration tests for campground routes using supertest.
- * External services (DB, Redis, Groq, Cloudinary) are mocked.
+ * External services (DB, Redis, Gemini, Cloudinary) are mocked.
  */
 
 // ── All mocks BEFORE any imports ──────────────────────────────────────────────
@@ -19,7 +19,7 @@ jest.mock('mongoose', () => {
 jest.mock('../../models/campground');
 jest.mock('../../models/user');
 jest.mock('../../models/review');
-jest.mock('../../services/groqModeration', () => ({
+jest.mock('../../services/geminiModeration', () => ({
   moderateImage: jest.fn().mockResolvedValue({ isSafe: true, reason: 'Safe image' }),
 }));
 jest.mock('../../services/redis', () => ({

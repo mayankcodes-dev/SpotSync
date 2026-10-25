@@ -1,15 +1,10 @@
-// Global test setup — runs before every test file
-// Sets all required environment variables so modules can be imported without throwing
-
-process.env.NODE_ENV = 'test';
-process.env.GEMINI_API_KEY = 'test-gemini-api-key';
-process.env.UPSTASH_REDIS_REST_URL = 'https://fake-upstash.upstash.io';
-process.env.UPSTASH_REDIS_REST_TOKEN = 'fake-upstash-token';
-process.env.CLOUDINARY_CLOUD_NAME = 'test-cloud';
-process.env.CLOUDINARY_KEY = '123456789012345';
-process.env.CLOUDINARY_SECRET = 'test-cloudinary-secret';
-process.env.CLOUDINARY_URL = 'cloudinary://123456789012345:test-cloudinary-secret@test-cloud';
-process.env.MAPTILER_API_KEY = 'test-maptiler-key';
-process.env.DB_URL = 'mongodb://localhost:27017/spotsync-test';
-process.env.SECRET = 'test-session-secret-for-jest';
-process.env.PORT = '3001';
+/**
+ * Jest global setup — runs once after all tests in a suite.
+ * Closes any lingering async handles so Jest can exit cleanly
+ * without --forceExit or the "open handles" warning.
+ */
+afterAll(async () => {
+  // Give any in-flight async ops (e.g. Upstash Redis HTTP keep-alive) a moment
+  // to settle, then allow the event loop to drain naturally.
+  await new Promise<void>((resolve) => setTimeout(resolve, 500));
+});

@@ -53,22 +53,22 @@ describe('Users Controller', () => {
     it('should flash success and redirect after login', () => {
       const req = mockReq() as Request;
       const res = mockRes() as Response;
-      res.locals = { returnTo: '/campgrounds' } as any;
+      res.locals = { returnTo: '/spots/123' } as any;
 
       usersController.login(req, res);
 
       expect(req.flash).toHaveBeenCalledWith('success', 'Welcome Back!');
-      expect(res.redirect).toHaveBeenCalledWith('/campgrounds');
+      expect(res.redirect).toHaveBeenCalledWith('/spots/123');
     });
 
-    it('should redirect to /campgrounds if no returnTo stored', () => {
+    it('should redirect to /spots if no returnTo stored', () => {
       const req = mockReq() as Request;
       const res = mockRes() as Response;
       res.locals = {} as any;
 
       usersController.login(req, res);
 
-      expect(res.redirect).toHaveBeenCalledWith('/campgrounds');
+      expect(res.redirect).toHaveBeenCalledWith('/spots');
     });
   });
 
@@ -82,7 +82,7 @@ describe('Users Controller', () => {
 
       expect(mockLogout).toHaveBeenCalled();
       expect(req.flash).toHaveBeenCalledWith('success', 'Goodbye!');
-      expect(res.redirect).toHaveBeenCalledWith('/campgrounds');
+      expect(res.redirect).toHaveBeenCalledWith('/spots');
     });
 
     it('should call next(err) if logout fails', () => {
@@ -113,7 +113,7 @@ describe('Users Controller', () => {
       await usersController.register(req, res);
 
       expect(req.flash).toHaveBeenCalledWith('success', 'Welcome to SpotSync!');
-      expect(res.redirect).toHaveBeenCalledWith('/campgrounds');
+      expect(res.redirect).toHaveBeenCalledWith('/spots');
     });
 
     it('should flash error and redirect to /register on failure', async () => {

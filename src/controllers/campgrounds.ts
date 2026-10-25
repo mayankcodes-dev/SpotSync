@@ -3,7 +3,7 @@ import Campground, { ICampground } from '../models/campground';
 import { cloudinary } from '../cloudinary';
 import { geocoding } from '@maptiler/client';
 import * as maptilerClient from '@maptiler/client';
-import { moderateImage } from '../services/groqModeration';
+import { moderateImage } from '../services/geminiModeration';
 import {
   getCached,
   setCache,
@@ -74,7 +74,7 @@ export const createCampground = async (req: Request, res: Response, next: NextFu
   const files = req.files as Express.Multer.File[];
   const uploadedImages = files.map((f: any) => ({ url: f.path, filename: f.filename }));
 
-  // ── Groq AI Image Moderation ─────────────────────────────────────────────
+  // ── Gemini AI Image Moderation ─────────────────────────────────────────────
   if (uploadedImages.length > 0) {
     const moderationResults = await Promise.all(
       uploadedImages.map(async (img) => {
@@ -202,8 +202,36 @@ export const updateCampground = async (req: Request, res: Response): Promise<voi
   }
 
   const files = (req.files as Express.Multer.File[]) || [];
-  const imgs = files.map((f: any) => ({ url: f.path, filename: f.filename }));
-  campground.images.push(...(imgs as any[]));
+  const newImages = files.map((f: any) => ({ url: f.path, filename: f.filename }));
+
+  // ── Gemini AI Image Moderation (on newly uploaded files) ─────────────────
+  if (newImages.length > 0) {
+    const moderationResults = await Promise.all(
+      newImages.map(async (img) => {
+        const result = await moderateImage(img.url);
+        return { ...img, ...result };
+      })
+    );
+
+    const unsafeImages = moderationResults.filter((r) => !r.isSafe);
+
+    if (unsafeImages.length > 0) {
+      // Delete rejected images from Cloudinary before saving
+      await Promise.all(
+        newImages.map((img) =>
+          cloudinary.uploader.destroy(img.filename).catch((err) =>
+            console.error('Cloudinary delete error during update:', err)
+          )
+        )
+      );
+      const reason = unsafeImages[0].reason || 'Image failed content moderation.';
+      req.flash('error', `Image rejected: ${reason} Please upload a relevant camping/nature photo.`);
+      res.redirect(`/spots/${id}/edit`);
+      return;
+    }
+  }
+
+  campground.images.push(...(newImages as any[]));
   await campground.save();
 
   if (req.body.deleteImages) {

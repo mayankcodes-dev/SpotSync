@@ -17,7 +17,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         return;
       }
       req.flash('success', 'Welcome to SpotSync!');
-      res.redirect('/campgrounds');
+      res.redirect('/spots');
     });
   } catch (e: any) {
     req.flash('error', e.message);
@@ -31,7 +31,7 @@ export const renderLogin = (req: Request, res: Response): void => {
 
 export const login = (req: Request, res: Response): void => {
   req.flash('success', 'Welcome Back!');
-  const redirectUrl = res.locals.returnTo || '/campgrounds';
+  const redirectUrl = res.locals.returnTo || '/spots';
   res.redirect(redirectUrl);
 };
 
@@ -41,6 +41,6 @@ export const logout = (req: Request, res: Response, next: NextFunction): void =>
       return next(err);
     }
     req.flash('success', 'Goodbye!');
-    res.redirect('/campgrounds');
+    res.redirect('/spots');
   });
 };

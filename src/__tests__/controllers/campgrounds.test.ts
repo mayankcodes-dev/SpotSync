@@ -1,7 +1,7 @@
 // ── All mocks BEFORE any imports ──────────────────────────────────────────────
 
 // Provide env vars BEFORE any module is loaded so Groq doesn't throw
-process.env.GROQ_API_KEY = 'test-groq-key';
+process.env.GEMINI_API_KEY = 'test-gemini-key';
 process.env.CLOUDINARY_CLOUD_NAME = 'test-cloud';
 process.env.CLOUDINARY_KEY = '123456';
 process.env.CLOUDINARY_SECRET = 'test-secret';
@@ -10,7 +10,7 @@ process.env.UPSTASH_REDIS_REST_URL = 'https://fake.upstash.io';
 process.env.UPSTASH_REDIS_REST_TOKEN = 'fake-token';
 
 jest.mock('../../models/campground');
-jest.mock('../../services/groqModeration');
+jest.mock('../../services/geminiModeration');
 jest.mock('../../services/redis', () => ({
   getCached: jest.fn(),
   setCache: jest.fn(),
@@ -36,7 +36,7 @@ jest.mock('@maptiler/client', () => ({
 import { Request, Response, NextFunction } from 'express';
 import * as campgroundController from '../../controllers/campgrounds';
 import Campground from '../../models/campground';
-import { moderateImage } from '../../services/groqModeration';
+import { moderateImage } from '../../services/geminiModeration';
 import { getCached, setCache, deleteCache } from '../../services/redis';
 
 const mockCampground = {

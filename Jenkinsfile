@@ -52,7 +52,7 @@ pipeline {
             environment {
                 NODE_ENV = 'test'
                 // Provide dummy env vars so imports don't crash
-                GROQ_API_KEY             = 'test-key'
+                GEMINI_API_KEY           = 'test-key'
                 UPSTASH_REDIS_REST_URL   = 'https://fake.upstash.io'
                 UPSTASH_REDIS_REST_TOKEN = 'fake-token'
                 MAPTILER_API_KEY         = 'test-maptiler-key'

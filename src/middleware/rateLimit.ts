@@ -54,6 +54,6 @@ export const registerRateLimit = makeRateLimitMiddleware(
 // Rate limit for campground creation
 export const createCampgroundRateLimit = makeRateLimitMiddleware(
   campgroundCreateRateLimiter,
-  '/campgrounds/new',
+  '/spots/new',
   'Too many campground submissions. Please wait a minute and try again.'
 );

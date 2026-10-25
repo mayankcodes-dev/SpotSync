@@ -50,6 +50,7 @@
         <div class="d-flex flex-wrap gap-3">
           <a class="btn btn-outline-primary rounded-3" href="/spots/<%=campground._id%>/edit">Edit Spot</a>
           <form class="d-inline" action="/spots/<%=campground._id%>?_method=DELETE" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
             <button class="btn btn-outline-danger rounded-3" type="submit">Delete Spot</button>
           </form>
         </div>
@@ -67,6 +68,7 @@
       <div class="card-body p-4">
         <h3 class="h5 mb-3">Leave a Review</h3>
         <form action="/spots/<%= campground._id %>/reviews" method="POST" class="form-validate" novalidate>
+          <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
           <div class="mb-3">
             <fieldset class="starability-grow">
               <input type="radio" id="no-rate" class="input-no-rate" name="review[rating]" value="1" checked aria-label="No rating." />
@@ -112,6 +114,7 @@
             %>
             <% if (canDeleteReview) { %>
             <form action="/spots/<%= campground._id %>/reviews/<%= review._id %>?_method=DELETE" method="POST">
+              <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
               <button class="btn btn-sm btn-outline-danger">Delete</button>
             </form>
             <% } %>

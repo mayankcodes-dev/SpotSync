@@ -4,6 +4,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 import express, { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
+import { doubleCsrf } from 'csrf-csrf';
 import path from 'path';
 import mongoose from 'mongoose';
 import session from 'express-session';
@@ -136,12 +137,27 @@ passport.use(new LocalStrategy((User as any).authenticate()));
 passport.serializeUser((User as any).serializeUser());
 passport.deserializeUser((User as any).deserializeUser());
 
+// ─── CSRF Protection ─────────────────────────────────────────────────────────
+const { doubleCsrfProtection, generateToken } = doubleCsrf({
+  getSecret: () => process.env.SECRET || 'spotsync-csrf-secret-changeme',
+  cookieName: '__Host-psifi.x-csrf-token',
+  cookieOptions: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  },
+  size: 64,
+  ignoredMethods: ['GET', 'HEAD', 'OPTIONS'],
+});
+app.use(doubleCsrfProtection);
+
 // ─── Local Variables ─────────────────────────────────────────────────────────
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.locals.currentUser = req.user;
   res.locals.success = req.flash('success');
   res.locals.error = req.flash('error');
   res.locals.maptilerApiKey = process.env.MAPTILER_API_KEY || '';
+  res.locals.csrfToken = () => generateToken(req, res);
   let mainContentClass = '';
   if (req.path === '/login' || req.path === '/register') {
     mainContentClass = 'main-content--auth';
@@ -159,8 +175,13 @@ app.get('/', (req: Request, res: Response) => {
   res.render('home', { activePage: 'home' });
 });
 
-// ─── Multer Error Handler ─────────────────────────────────────────────────────
+// ─── CSRF + Multer Error Handler ──────────────────────────────────────────────
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  // CSRF token invalid/expired
+  if (err.code === 'EBADCSRFTOKEN' || err.message === 'invalid csrf token') {
+    req.flash('error', 'Form session expired or invalid. Please try again.');
+    return res.redirect('back');
+  }
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
       req.flash('error', 'Each image must be under 10 MB.');

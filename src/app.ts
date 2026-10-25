@@ -138,9 +138,10 @@ passport.serializeUser((User as any).serializeUser());
 passport.deserializeUser((User as any).deserializeUser());
 
 // ─── CSRF Protection ─────────────────────────────────────────────────────────
-const { doubleCsrfProtection, generateToken } = doubleCsrf({
+const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
   getSecret: () => process.env.SECRET || 'spotsync-csrf-secret-changeme',
-  cookieName: '__Host-psifi.x-csrf-token',
+  getSessionIdentifier: (req: Request) => (req.session as any)?.id || '',
+  cookieName: 'psifi.x-csrf-token', // no __Host- prefix so it works on http in dev too
   cookieOptions: {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -157,7 +158,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   res.locals.success = req.flash('success');
   res.locals.error = req.flash('error');
   res.locals.maptilerApiKey = process.env.MAPTILER_API_KEY || '';
-  res.locals.csrfToken = () => generateToken(req, res);
+  res.locals.csrfToken = () => generateCsrfToken(req, res);
   let mainContentClass = '';
   if (req.path === '/login' || req.path === '/register') {
     mainContentClass = 'main-content--auth';

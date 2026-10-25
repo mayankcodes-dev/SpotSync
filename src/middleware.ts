@@ -27,7 +27,7 @@ export const storeReturnTo = (req: Request, res: Response, next: NextFunction): 
 export const validateCampground = (req: Request, res: Response, next: NextFunction): void => {
   const { error } = campgroundSchema.validate(req.body);
   if (error) {
-    const msg = error.details.map((el) => el.message).join(',');
+    const msg = error.details.map((el: { message: string }) => el.message).join(',');
     throw new ExpressError(msg, 400);
   } else {
     next();
@@ -55,7 +55,7 @@ export const isAuthor = async (req: Request, res: Response, next: NextFunction):
 export const validateReview = (req: Request, res: Response, next: NextFunction): void => {
   const { error } = reviewSchema.validate(req.body);
   if (error) {
-    const msg = error.details.map((el) => el.message).join(',');
+    const msg = error.details.map((el: { message: string }) => el.message).join(',');
     throw new ExpressError(msg, 400);
   } else {
     next();

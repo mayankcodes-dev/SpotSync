@@ -6,7 +6,10 @@ import { createCampgroundRateLimit } from '../middleware/rateLimit';
 import multer from 'multer';
 import { storage } from '../cloudinary';
 
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024, files: 5 }, // 10 MB per file, max 5 files
+});
 const router = express.Router();
 
 router.route('/')

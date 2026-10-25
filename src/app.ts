@@ -3,6 +3,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 import express, { Request, Response, NextFunction } from 'express';
+import multer from 'multer';
 import path from 'path';
 import mongoose from 'mongoose';
 import session from 'express-session';
@@ -158,11 +159,25 @@ app.get('/', (req: Request, res: Response) => {
   res.render('home', { activePage: 'home' });
 });
 
+// ─── Multer Error Handler ─────────────────────────────────────────────────────
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      req.flash('error', 'Each image must be under 10 MB.');
+    } else if (err.code === 'LIMIT_FILE_COUNT') {
+      req.flash('error', 'You can upload a maximum of 5 images.');
+    } else {
+      req.flash('error', `Upload error: ${err.message}`);
+    }
+    return res.redirect('back');
+  }
+  next(err);
+});
+
 // ─── 404 Handler ─────────────────────────────────────────────────────────────
 app.all(/(.*)/, (req: Request, res: Response, next: NextFunction) => {
   next(new ExpressError('Page Not Found', 404));
 });
-
 // ─── Error Handler ───────────────────────────────────────────────────────────
 app.use((err: ExpressError, req: Request, res: Response, next: NextFunction) => {
   const { statusCode = 500 } = err;

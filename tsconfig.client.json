@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "module": "None",
+    "lib": ["ES2017", "DOM", "DOM.Iterable"],
+    "outDir": "./public/javascripts",
+    "rootDir": "./client",
+    "strict": true,
+    "noImplicitAny": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "sourceMap": false,
+    "declaration": false
+  },
+  "include": ["client/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

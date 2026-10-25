@@ -7,14 +7,19 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc -p tsconfig.client.json && tsc -p tsconfig.sw.json",
+    "build:server": "tsc",
+    "build:client": "tsc -p tsconfig.client.json",
+    "build:sw": "tsc -p tsconfig.sw.json",
     "start": "node dist/app.js",
     "start:prod": "NODE_ENV=production node dist/app.js",
     "dev": "ts-node src/app.ts",
     "dev:watch": "nodemon --exec ts-node src/app.ts",
     "test": "jest --forceExit",
     "test:coverage": "jest --coverage --forceExit",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit && tsc -p tsconfig.client.json --noEmit && tsc -p tsconfig.sw.json --noEmit",
+    "seed": "ts-node seeds/index.ts",
+    "generate:icons": "ts-node scripts/generateIcons.ts"
   },
   "keywords": [
     "camping",
@@ -64,6 +69,7 @@
     "@types/passport": "^1.0.17",
     "@types/passport-local": "^1.0.38",
     "@types/sanitize-html": "^2.16.0",
+    "@types/serviceworker": "^0.0.203",
     "@types/supertest": "^6.0.3",
     "jest": "^30.0.4",
     "supertest": "^7.1.0",

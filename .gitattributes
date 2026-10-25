@@ -1,0 +1,7 @@
+# ── Linguist overrides ──────────────────────────────────────────────────────────
+# Mark seeds/cities.js as vendored data (9000-line city dataset, not app code)
+seeds/cities.js    linguist-vendored=true
+
+# Mark compiled browser JS as generated (source is in client/ as TypeScript)
+public/javascripts/*.js   linguist-generated=true
+public/sw.js              linguist-generated=true

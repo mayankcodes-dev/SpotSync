@@ -149,7 +149,7 @@
             </div>
             <div class="modal-body py-4">
               <div class="d-flex align-items-center mb-3 p-3 rounded" style="background:#f0faf5;">
-                <img src="/images/logo.png" alt="SpotSync" width="56" height="56" class="rounded-3 me-3 shadow-sm">
+                <img src="https://res.cloudinary.com/dgqgzmzed/image/upload/v1758799239/pngtree-camping-logo-design-vector-png-image_5284762_iedxjj.jpg" alt="SpotSync" width="56" height="56" class="rounded-3 me-3 shadow-sm">
                 <div>
                   <div class="fw-bold fs-5">SpotSync</div>
                   <div class="text-muted small">Free · Works offline · No app store needed</div>

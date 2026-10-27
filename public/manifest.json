@@ -12,9 +12,9 @@
   "categories": ["travel", "lifestyle", "navigation"],
   "icons": [
     {
-      "src": "/images/logo.png",
+      "src": "https://res.cloudinary.com/dgqgzmzed/image/upload/v1758799239/pngtree-camping-logo-design-vector-png-image_5284762_iedxjj.jpg",
       "sizes": "any",
-      "type": "image/png",
+      "type": "image/jpeg",
       "purpose": "any"
     },
     {

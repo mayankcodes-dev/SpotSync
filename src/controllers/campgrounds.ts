@@ -8,16 +8,46 @@ import {
   getCached,
   setCache,
   deleteCache,
-  deleteCachePattern,
   CACHE_KEYS,
 } from '../services/redis';
 
 (maptilerClient as any).config.apiKey = process.env.MAPTILER_API_KEY;
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Delete a list of Cloudinary images safely (never throws). */
+async function destroyImages(images: { filename: string }[]): Promise<void> {
+  await Promise.allSettled(
+    images.map((img) =>
+      cloudinary.uploader
+        .destroy(img.filename)
+        .catch((err: Error) => console.error('Cloudinary delete error:', err)),
+    ),
+  );
+}
+
+/** Run Gemini moderation on all images; return the first unsafe reason or null. */
+async function checkModeration(
+  images: { url: string; filename: string }[],
+): Promise<string | null> {
+  if (images.length === 0) return null;
+
+  const results = await Promise.allSettled(
+    images.map((img) => moderateImage(img.url)),
+  );
+
+  for (const result of results) {
+    if (result.status === 'fulfilled' && !result.value.isSafe) {
+      return result.value.reason || 'Image failed content moderation.';
+    }
+    // If moderation threw (rejected promise) — fail open, allow upload
+  }
+  return null;
+}
+
 // ─── INDEX ───────────────────────────────────────────────────────────────────
 export const index = async (req: Request, res: Response): Promise<void> => {
   try {
-    // Try Redis cache first
     const cached = await getCached<any>(CACHE_KEYS.campgroundsAll);
     if (cached) {
       const { campgrounds, campgroundsGeoJSON } = cached;
@@ -32,7 +62,7 @@ export const index = async (req: Request, res: Response): Promise<void> => {
         (cg) =>
           cg.geometry &&
           Array.isArray(cg.geometry.coordinates) &&
-          cg.geometry.coordinates.length >= 2
+          cg.geometry.coordinates.length >= 2,
       )
       .map((cg) => {
         const desc = cg.description || '';
@@ -50,12 +80,9 @@ export const index = async (req: Request, res: Response): Promise<void> => {
       });
 
     const campgroundsGeoJSON = { type: 'FeatureCollection', features };
-
-    // Cache the result
     await setCache(CACHE_KEYS.campgroundsAll, { campgrounds, campgroundsGeoJSON });
-
     res.render('campgrounds/index', { campgrounds, campgroundsGeoJSON, activePage: 'campgrounds' });
-  } catch (err) {
+  } catch (_err) {
     res.render('campgrounds/index', {
       campgrounds: [],
       campgroundsGeoJSON: { type: 'FeatureCollection', features: [] },
@@ -70,69 +97,59 @@ export const renderNewForm = (req: Request, res: Response): void => {
 };
 
 // ─── CREATE ──────────────────────────────────────────────────────────────────
-export const createCampground = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  const files = req.files as Express.Multer.File[];
-  const uploadedImages = files.map((f: any) => ({ url: f.path, filename: f.filename }));
+export const createCampground = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const files = (req.files as Express.Multer.File[]) || [];
+    const uploadedImages = files.map((f: any) => ({ url: f.path as string, filename: f.filename as string }));
 
-  // ── Gemini AI Image Moderation ─────────────────────────────────────────────
-  if (uploadedImages.length > 0) {
-    const moderationResults = await Promise.all(
-      uploadedImages.map(async (img) => {
-        const result = await moderateImage(img.url);
-        return { ...img, ...result };
-      })
-    );
-
-    const unsafeImages = moderationResults.filter((r) => !r.isSafe);
-
-    if (unsafeImages.length > 0) {
-      // Delete ALL uploaded images from Cloudinary
-      await Promise.all(
-        uploadedImages.map((img) =>
-          cloudinary.uploader.destroy(img.filename).catch((err) =>
-            console.error('Cloudinary delete error:', err)
-          )
-        )
+    // ── Gemini AI Image Moderation ─────────────────────────────────────────
+    const unsafeReason = await checkModeration(uploadedImages);
+    if (unsafeReason) {
+      // Clean up Cloudinary before redirecting
+      await destroyImages(uploadedImages);
+      req.flash(
+        'error',
+        `Image rejected: ${unsafeReason} Please upload a relevant camping or nature photo.`,
       );
-
-      const reason = unsafeImages[0].reason || 'Image failed content moderation.';
-      req.flash('error', `Image rejected: ${reason} Please upload a relevant camping/nature photo.`);
       res.redirect('/spots/new');
       return;
     }
-  }
 
-  const campground = new Campground(req.body.campground);
-
-  // Geocoding
-  if (campground.location) {
-    try {
-      const geoData = await geocoding.forward(campground.location, { limit: 1 });
-      if (geoData.features && geoData.features.length > 0) {
-        campground.geometry = geoData.features[0].geometry as any;
-      } else {
-        req.flash('error', 'Location could not be found. Please try a different location.');
-        await Promise.all(uploadedImages.map((img) => cloudinary.uploader.destroy(img.filename)));
+    // ── Geocoding ──────────────────────────────────────────────────────────
+    const campground = new Campground(req.body.campground);
+    if (campground.location) {
+      try {
+        const geoData = await geocoding.forward(campground.location, { limit: 1 });
+        if (geoData.features && geoData.features.length > 0) {
+          campground.geometry = geoData.features[0].geometry as any;
+        } else {
+          req.flash('error', 'Location could not be found. Please try a different location.');
+          await destroyImages(uploadedImages);
+          res.redirect('/spots/new');
+          return;
+        }
+      } catch (_geoErr) {
+        req.flash('error', 'Geocoding service error. Please try again later.');
+        await destroyImages(uploadedImages);
         res.redirect('/spots/new');
         return;
       }
-    } catch (err) {
-      req.flash('error', 'Geocoding service error. Please try again later.');
-      await Promise.all(uploadedImages.map((img) => cloudinary.uploader.destroy(img.filename)));
-      res.redirect('/spots/new');
-      return;
     }
+
+    campground.images = uploadedImages;
+    campground.author = (req.user as any)._id;
+    await campground.save();
+
+    await deleteCache(CACHE_KEYS.campgroundsAll);
+    req.flash('success', 'Successfully created a new spot!');
+    res.redirect(`/spots/${campground._id}`);
+  } catch (err) {
+    next(err);
   }
-
-  campground.images = uploadedImages;
-  campground.author = (req.user as any)._id;
-  await campground.save();
-
-  // Invalidate cache
-  await deleteCache(CACHE_KEYS.campgroundsAll);
-
-  req.flash('success', 'Successfully created a new spot!');
-  res.redirect(`/spots/${campground._id}`);
 };
 
 // ─── SHOW ─────────────────────────────────────────────────────────────────────
@@ -140,7 +157,6 @@ export const showCampground = async (req: Request, res: Response): Promise<void>
   const id = String(req.params.id);
   const cacheKey = CACHE_KEYS.campgroundById(id);
 
-  // Try cache
   const cached = await getCached<ICampground>(cacheKey);
   if (cached) {
     res.render('campgrounds/show', { campground: cached, activePage: 'campgrounds' });
@@ -157,9 +173,7 @@ export const showCampground = async (req: Request, res: Response): Promise<void>
     return;
   }
 
-  // Cache the campground
   await setCache(cacheKey, campground.toJSON());
-
   res.render('campgrounds/show', { campground, activePage: 'campgrounds' });
 };
 
@@ -175,86 +189,97 @@ export const renderEditForm = async (req: Request, res: Response): Promise<void>
 };
 
 // ─── UPDATE ──────────────────────────────────────────────────────────────────
-export const updateCampground = async (req: Request, res: Response): Promise<void> => {
-  const id = String(req.params.id);
-  const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground }, { new: true });
-
-  if (!campground) {
-    req.flash('error', 'Cannot find that spot!');
-    res.redirect('/spots');
-    return;
-  }
-
-  // Geocode updated location
+export const updateCampground = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
   try {
-    const geoData = await geocoding.forward(req.body.campground.location, { limit: 1 });
-    if (geoData && geoData.features && geoData.features.length > 0) {
-      campground.geometry = geoData.features[0].geometry as any;
-    } else {
-      req.flash('error', 'Location could not be found. Please try a different location.');
+    const id = String(req.params.id);
+
+    const files = (req.files as Express.Multer.File[]) || [];
+    const newImages = files.map((f: any) => ({ url: f.path as string, filename: f.filename as string }));
+
+    // ── Gemini AI Moderation BEFORE saving anything ────────────────────────
+    // Bug fix: moderation must happen BEFORE findByIdAndUpdate, not after.
+    const unsafeReason = await checkModeration(newImages);
+    if (unsafeReason) {
+      await destroyImages(newImages);
+      req.flash(
+        'error',
+        `Image rejected: ${unsafeReason} Please upload a relevant camping or nature photo.`,
+      );
       res.redirect(`/spots/${id}/edit`);
       return;
     }
-  } catch (err) {
-    req.flash('error', 'Geocoding service error. Please try again later.');
-    res.redirect(`/spots/${id}/edit`);
-    return;
-  }
 
-  const files = (req.files as Express.Multer.File[]) || [];
-  const newImages = files.map((f: any) => ({ url: f.path, filename: f.filename }));
-
-  // ── Gemini AI Image Moderation (on newly uploaded files) ─────────────────
-  if (newImages.length > 0) {
-    const moderationResults = await Promise.all(
-      newImages.map(async (img) => {
-        const result = await moderateImage(img.url);
-        return { ...img, ...result };
-      })
+    // ── Update text fields ─────────────────────────────────────────────────
+    const campground = await Campground.findByIdAndUpdate(
+      id,
+      { ...req.body.campground },
+      { new: true, runValidators: true },
     );
 
-    const unsafeImages = moderationResults.filter((r) => !r.isSafe);
+    if (!campground) {
+      await destroyImages(newImages);
+      req.flash('error', 'Cannot find that spot!');
+      res.redirect('/spots');
+      return;
+    }
 
-    if (unsafeImages.length > 0) {
-      // Delete rejected images from Cloudinary before saving
-      await Promise.all(
-        newImages.map((img) =>
-          cloudinary.uploader.destroy(img.filename).catch((err) =>
-            console.error('Cloudinary delete error during update:', err)
-          )
-        )
-      );
-      const reason = unsafeImages[0].reason || 'Image failed content moderation.';
-      req.flash('error', `Image rejected: ${reason} Please upload a relevant camping/nature photo.`);
+    // ── Geocode updated location ───────────────────────────────────────────
+    try {
+      const geoData = await geocoding.forward(req.body.campground.location, { limit: 1 });
+      if (geoData?.features?.length > 0) {
+        campground.geometry = geoData.features[0].geometry as any;
+      } else {
+        req.flash('error', 'Location could not be found. Please try a different location.');
+        res.redirect(`/spots/${id}/edit`);
+        return;
+      }
+    } catch (_geoErr) {
+      req.flash('error', 'Geocoding service error. Please try again later.');
       res.redirect(`/spots/${id}/edit`);
       return;
     }
-  }
 
-  campground.images.push(...(newImages as any[]));
-  await campground.save();
+    // ── Append new images ──────────────────────────────────────────────────
+    campground.images.push(...(newImages as any[]));
 
-  if (req.body.deleteImages) {
-    for (const filename of req.body.deleteImages) {
-      await cloudinary.uploader.destroy(filename);
+    // ── Delete removed images ──────────────────────────────────────────────
+    if (req.body.deleteImages) {
+      const toDelete: string[] = Array.isArray(req.body.deleteImages)
+        ? req.body.deleteImages
+        : [req.body.deleteImages];
+
+      await destroyImages(toDelete.map((filename) => ({ filename })));
+      await campground.updateOne({ $pull: { images: { filename: { $in: toDelete } } } });
     }
-    await campground.updateOne({ $pull: { images: { filename: { $in: req.body.deleteImages } } } });
+
+    await campground.save();
+
+    // Invalidate cache
+    await deleteCache(CACHE_KEYS.campgroundById(id));
+    await deleteCache(CACHE_KEYS.campgroundsAll);
+
+    req.flash('success', 'Successfully updated spot!');
+    res.redirect(`/spots/${id}`);
+  } catch (err) {
+    next(err);
   }
-
-  // Invalidate cache
-  await deleteCache(CACHE_KEYS.campgroundById(id));
-  await deleteCache(CACHE_KEYS.campgroundsAll);
-
-  req.flash('success', 'Successfully updated spot!');
-  res.redirect(`/spots/${id}`);
 };
 
 // ─── DELETE ──────────────────────────────────────────────────────────────────
 export const deleteCampground = async (req: Request, res: Response): Promise<void> => {
   const id = String(req.params.id);
-  await Campground.findByIdAndDelete(id);
 
-  // Invalidate cache
+  // Also delete images from Cloudinary
+  const campground = await Campground.findById(id);
+  if (campground?.images?.length) {
+    await destroyImages(campground.images);
+  }
+
+  await Campground.findByIdAndDelete(id);
   await deleteCache(CACHE_KEYS.campgroundById(id));
   await deleteCache(CACHE_KEYS.campgroundsAll);
 

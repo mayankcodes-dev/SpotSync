@@ -17,8 +17,19 @@ function makeRateLimitMiddleware(
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const identifier = getClientIp(req);
-      const { success, limit, remaining, reset } = await limiter.limit(identifier);
+      // Race against a 2.5 s timeout — if Redis is unreachable, fail open
+      const result = await Promise.race([
+        limiter.limit(identifier),
+        new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), 2500)),
+      ]);
 
+      // Timed out or error — allow the request through
+      if (!result) {
+        next();
+        return;
+      }
+
+      const { success, limit, remaining, reset } = result;
       res.setHeader('X-RateLimit-Limit', limit.toString());
       res.setHeader('X-RateLimit-Remaining', remaining.toString());
       res.setHeader('X-RateLimit-Reset', reset.toString());

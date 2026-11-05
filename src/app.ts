@@ -56,11 +56,10 @@ db.once('open', () => {
 // ─── App Setup ──────────────────────────────────────────────────────────────
 const app = express();
 
-// Express receives requests from Nginx in production. Trusting the local
-// reverse proxy is required for secure session and CSRF cookies to work.
-if (process.env.NODE_ENV === 'production') {
-  app.set('trust proxy', 1);
-}
+// Always trust the first proxy (Nginx). Required so req.ip is the real client
+// IP and so Express sets the correct protocol (https) when behind Cloudflare.
+// This must NOT be conditional — the server always sits behind Nginx.
+app.set('trust proxy', 1);
 
 // Use ejs-mate for layouts
 app.engine('ejs', ejsMate);
@@ -97,7 +96,11 @@ const sessionConfig: session.SessionOptions = {
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    // Cookies must be secure when served over HTTPS (via Cloudflare).
+    // With trust proxy = 1, Express sees req.secure = true when Cloudflare
+    // sends the X-Forwarded-Proto: https header, so we can always enable this.
+    secure: true,
+    sameSite: 'lax',
     maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
   },
 };
@@ -115,6 +118,7 @@ app.use(
         'https://api.maptiler.com',
         'https://cdn.jsdelivr.net',
         'https://events.maptiler.com',
+        'https://api.mapbox.com',
       ],
       scriptSrc: [
         "'self'",
@@ -146,12 +150,16 @@ app.use(
         'https://api.maptiler.com',
         'https://t3.ftcdn.net',
         '*.maptiler.com',
+        // MapTiler tile servers use various subdomains
+        'https://*.maptiler.com',
       ],
-      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdn.maptiler.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdn.maptiler.com', 'https://kit-free.fontawesome.com/', 'https://use.fontawesome.com/'],
       objectSrc: ["'none'"],
       workerSrc: ["'self'", 'blob:'],
       frameSrc: ["'none'"],
       manifestSrc: ["'self'"],
+      // Do NOT include upgrade-insecure-requests — it breaks Cloudflare Flexible
+      // SSL where Cloudflare→origin is HTTP but browser sees HTTPS.
     },
   })
 );
@@ -178,10 +186,12 @@ app.use(cookieParser());
 const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
   getSecret: () => process.env.SECRET || 'spotsync-csrf-secret-changeme',
   getSessionIdentifier: (req: Request) => (req.session as any)?.id || '',
-  cookieName: 'psifi.x-csrf-token', // no __Host- prefix so it works on http in dev too
+  cookieName: 'psifi.x-csrf-token',
   cookieOptions: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    // Must be secure:true when served via Cloudflare HTTPS.
+    // With trust proxy=1 and X-Forwarded-Proto, this is correct.
+    secure: true,
     sameSite: 'lax',
   },
   size: 64,
@@ -215,14 +225,42 @@ app.get('/', (req: Request, res: Response) => {
 
 // ─── CSRF + Multer Error Handler ──────────────────────────────────────────────
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  // CSRF token invalid/expired
+  // CSRF token invalid/expired — redirect safely using the Referer header
+  // path, or fall back to a sensible default. Never use res.redirect('back')
+  // because Express resolves it literally as the string "back" when no
+  // Referrer header is present (common with Cloudflare proxy).
   if (err.code === 'EBADCSRFTOKEN' || err.message === 'invalid csrf token') {
     req.flash('error', 'Form session expired or invalid. Please try again.');
-    return res.redirect('back');
+    // Derive a safe redirect from the Referer header; strip the origin so we
+    // only keep the path, then validate it starts with '/'.
+    let safePath = '/';
+    try {
+      const referer = req.get('Referer') || '';
+      if (referer) {
+        const url = new URL(referer);
+        safePath = url.pathname || '/';
+      }
+    } catch {
+      // bad Referer — fall back to '/'
+    }
+    // Never redirect back to itself infinitely on POST routes
+    if (req.path === safePath && req.method !== 'GET') {
+      safePath = '/';
+    }
+    return res.redirect(safePath);
   }
   if (err.message === 'Only JPG, PNG, or WebP images are allowed.') {
     req.flash('error', err.message);
-    return res.redirect('back');
+    // Safe redirect using referrer
+    let safePath = '/spots';
+    try {
+      const referer = req.get('Referer') || '';
+      if (referer) {
+        const url = new URL(referer);
+        safePath = url.pathname || '/spots';
+      }
+    } catch { /* ignore */ }
+    return res.redirect(safePath);
   }
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
@@ -232,7 +270,15 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     } else {
       req.flash('error', `Upload error: ${err.message}`);
     }
-    return res.redirect('back');
+    let safePath = '/spots';
+    try {
+      const referer = req.get('Referer') || '';
+      if (referer) {
+        const url = new URL(referer);
+        safePath = url.pathname || '/spots';
+      }
+    } catch { /* ignore */ }
+    return res.redirect(safePath);
   }
   next(err);
 });

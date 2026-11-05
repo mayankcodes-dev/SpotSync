@@ -5,7 +5,7 @@ export interface ModerationResult {
   reason: string;
 }
 
-const MODERATION_MODEL = process.env.GEMINI_MODERATION_MODEL || 'gemini-3.8-flash';
+const MODERATION_MODEL = process.env.GEMINI_MODERATION_MODEL || 'gemini-2.0-flash';
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 15_000;
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);

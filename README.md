@@ -16,16 +16,16 @@ SpotSync is a **production-grade, full-stack camping-spot platform** built entir
 ## ✨ Features
 
 ### 🤖 AI-Powered Image Moderation (Core Feature)
-Every photo a user uploads is automatically analyzed by **Google Gemini 1.5 Flash Vision** before a single byte is saved to the database. This is not a bolt-on — it is the primary trust layer of the platform:
+Every photo a user uploads is automatically analyzed by **Google Gemini Vision** before it is saved to the database. This is not a bolt-on — it is the primary trust layer of the platform:
 
 - Images are **base64-encoded inline** (never sent as a URL — maximum privacy)
-- Moderation runs concurrently on all files via `Promise.allSettled`
+- Moderation runs in bounded concurrent batches to protect API quotas and server memory
 - If **any** image is flagged as unsafe, off-topic, or inappropriate:
   - All uploads are deleted from Cloudinary immediately
   - A clear flash error is shown to the user
   - **Nothing reaches MongoDB** — the DB write never happens
 - Covers both **create** and **edit** flows
-- Degrades safely when Gemini is unreachable (fails open, logs the error)
+- Fails closed when Gemini is unreachable, unavailable, or returns an invalid decision
 
 ```
 User Uploads Photos
@@ -37,7 +37,7 @@ User Uploads Photos
   Cloudinary (temporary upload → gets public_id + secure_url)
         │
         ▼
-  Gemini 1.5 Flash Vision (base64 inline analysis)
+  Gemini Vision (base64 inline analysis)
         │
    ┌────┴────┐
  UNSAFE     SAFE
@@ -177,7 +177,7 @@ Browser ◄──EJS render── Controller ◄── Model response
 | CSS | Bootstrap 5 |
 | Database | MongoDB Atlas (Mongoose ODM) |
 | Auth | Passport.js + passport-local-mongoose (bcrypt) |
-| AI Moderation | Google Gemini 1.5 Flash Vision API |
+| AI Moderation | Google Gemini Vision API (`gemini-3.8-flash` by default) |
 | Image CDN | Cloudinary (Multer memory storage) |
 | Maps | MapTiler SDK (WebGL 3D terrain) |
 | Caching | Upstash Redis (`@upstash/ratelimit`) |
@@ -213,8 +213,8 @@ npm install
 Create `.env` in the project root:
 
 ```env
-DATABASE_URL=mongodb+srv://<user>:<pass>@cluster.mongodb.net/spotsync
-SESSION_SECRET=your_super_secret_32_char_string
+DB_URL=mongodb+srv://<user>:<pass>@cluster.mongodb.net/spotsync
+SECRET=your_super_secret_32_char_string
 
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_KEY=your_api_key
@@ -222,6 +222,7 @@ CLOUDINARY_SECRET=your_api_secret
 
 MAPTILER_API_KEY=your_maptiler_key
 GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODERATION_MODEL=gemini-3.8-flash
 
 UPSTASH_REDIS_REST_URL=https://your-redis.upstash.io
 UPSTASH_REDIS_REST_TOKEN=your_token
@@ -241,7 +242,7 @@ npm run build:client # compile client TS → public/javascripts/
 
 ```bash
 npm run build        # compiles src/ → dist/
-node dist/server.js
+node dist/app.js
 ```
 
 ### 5. Tests

@@ -8,7 +8,7 @@ set -euo pipefail
 
 SHAPE="${1:-e2micro}"   # e2micro = 1 GB RAM → needs swap; a1flex = 6 GB → skip swap
 APP_DIR="/home/ubuntu/SpotSync"
-NODE_VERSION="20"       # LTS
+NODE_VERSION="22"       # LTS
 
 echo ""
 echo "=============================================="
@@ -47,10 +47,10 @@ fi
 # ------------------------------------------------------------------
 # 3. Open iptables ports (OCI Ubuntu blocks by default at OS level)
 # ------------------------------------------------------------------
-echo "[3/8] Opening firewall ports 22, 80, 443, 3000..."
+echo "[3/8] Opening firewall ports 80 and 443..."
 sudo apt-get install -y -qq iptables-persistent netfilter-persistent
 
-for PORT in 80 443 3000; do
+for PORT in 80 443; do
   if ! sudo iptables -C INPUT -p tcp --dport "$PORT" -j ACCEPT 2>/dev/null; then
     sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport "$PORT" -j ACCEPT
     echo "    Opened port $PORT"
@@ -96,13 +96,13 @@ fi
 # ------------------------------------------------------------------
 echo "[6/8] Installing npm deps & building TypeScript..."
 cd "$APP_DIR"
-npm install --omit=dev 2>&1 | tail -4
+npm ci 2>&1 | tail -4
 
 # Build server-side TypeScript → dist/
 npm run build 2>&1 | tail -4
 
-# Build client-side TypeScript → public/javascripts/
-npm run build:client 2>&1 | tail -4
+# Remove build-only packages after compilation.
+npm prune --omit=dev 2>&1 | tail -4
 
 echo "    Build complete."
 
@@ -136,8 +136,9 @@ cd "$APP_DIR"
 
 pm2 describe spotsync &>/dev/null && pm2 delete spotsync || true
 
-pm2 start dist/server.js \
+pm2 start dist/app.js \
   --name "spotsync" \
+  --cwd "$APP_DIR" \
   --max-memory-restart 800M \
   --restart-delay 3000
 

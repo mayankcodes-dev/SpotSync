@@ -4,6 +4,11 @@
  */
 
 // ── All mocks BEFORE any imports ──────────────────────────────────────────────
+jest.mock('sanitize-html', () => ({
+  __esModule: true,
+  default: (value: string) => value,
+}));
+
 jest.mock('mongoose', () => {
   const actual = jest.requireActual('mongoose');
   return {

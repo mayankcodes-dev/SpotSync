@@ -106,8 +106,8 @@ $null = OciRaw @('network','route-table','update',
     '--wait-for-state','AVAILABLE')
 OK "Route table updated."
 
-# ── Default Security List — allow 22, 80, 443, 3000 inbound ──────────
-Info "Updating default security list (ports 22, 80, 443, 3000)..."
+# ── Default Security List — allow SSH and web traffic inbound ─────────
+Info "Updating default security list (ports 22, 80, 443)..."
 $ingressRules = @(
     @{ source='0.0.0.0/0'; protocol='6'; isStateless=$false;
        tcpOptions=@{ destinationPortRange=@{ min=22;  max=22  } } },
@@ -115,8 +115,6 @@ $ingressRules = @(
        tcpOptions=@{ destinationPortRange=@{ min=80;  max=80  } } },
     @{ source='0.0.0.0/0'; protocol='6'; isStateless=$false;
        tcpOptions=@{ destinationPortRange=@{ min=443; max=443 } } },
-    @{ source='0.0.0.0/0'; protocol='6'; isStateless=$false;
-       tcpOptions=@{ destinationPortRange=@{ min=3000;max=3000} } },
     @{ source='0.0.0.0/0'; protocol='1'; isStateless=$false;
        icmpOptions=@{ type=3; code=4 } }   # ICMP type 3 code 4 (fragmentation needed)
 ) | ConvertTo-Json -Compress -Depth 6
@@ -131,7 +129,7 @@ $null = OciRaw @('network','security-list','update',
     '--egress-security-rules',  $egressRules,
     '--force',
     '--wait-for-state','AVAILABLE')
-OK "Security list updated (ports 22, 80, 443, 3000 open)."
+OK "Security list updated (ports 22, 80, 443 open)."
 
 # ── Public Subnet ────────────────────────────────────────────────────
 Info "Creating public subnet 'spotsync-subnet'..."

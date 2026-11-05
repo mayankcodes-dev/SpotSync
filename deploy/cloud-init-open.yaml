@@ -1,0 +1,39 @@
+﻿#cloud-config
+write_files:
+  - path: /etc/iptables/open-ssh.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      # Flush and fully open firewall - OCI Security Lists handle perimeter security
+      iptables -F
+      iptables -X
+      iptables -P INPUT ACCEPT
+      iptables -P FORWARD ACCEPT
+      iptables -P OUTPUT ACCEPT
+      ip6tables -F
+      ip6tables -X
+      ip6tables -P INPUT ACCEPT
+      ip6tables -P FORWARD ACCEPT
+      ip6tables -P OUTPUT ACCEPT
+      # Make it persistent
+      mkdir -p /etc/iptables
+      iptables-save > /etc/iptables/rules.v4
+      ip6tables-save > /etc/iptables/rules.v6
+  - path: /etc/rc.local
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      iptables -F
+      iptables -P INPUT ACCEPT
+      iptables -P FORWARD ACCEPT
+      iptables -P OUTPUT ACCEPT
+      exit 0
+
+bootcmd:
+  - [ bash, -c, "iptables -F; iptables -P INPUT ACCEPT; iptables -P FORWARD ACCEPT; iptables -P OUTPUT ACCEPT" ]
+  - [ bash, -c, "ip6tables -F; ip6tables -P INPUT ACCEPT" ]
+
+runcmd:
+  - bash /etc/iptables/open-ssh.sh
+  - systemctl enable rc-local || true
+  - DEBIAN_FRONTEND=noninteractive apt-get install -y -q iptables-persistent < /dev/null || true

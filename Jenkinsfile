@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        NODE_VERSION = '18'
+        NODE_VERSION = '22'
         APP_NAME     = 'spotsync'
         DIST_DIR     = 'dist'
     }

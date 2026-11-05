@@ -1,0 +1,6 @@
+{
+  "source": {
+    "sourceType": "TEXT",
+    "text": "iptables -F; iptables -P INPUT ACCEPT; iptables -P FORWARD ACCEPT; iptables -P OUTPUT ACCEPT; iptables-save > /etc/iptables/rules.v4; systemctl mask netfilter-persistent 2>/dev/null; echo FIREWALL_OK"
+  }
+}

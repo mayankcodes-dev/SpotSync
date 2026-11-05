@@ -1,0 +1,59 @@
+#cloud-config
+# Strategy: Pre-write open iptables rules AND disable iptables-persistent service
+# This ensures netfilter-persistent.service either loads open rules OR is masked entirely
+
+write_files:
+  # Replace iptables rules.v4 with completely open ruleset
+  - path: /etc/iptables/rules.v4
+    permissions: '0644'
+    content: |
+      # Open ruleset - OCI Security Lists handle perimeter security
+      *filter
+      :INPUT ACCEPT [0:0]
+      :FORWARD ACCEPT [0:0]
+      :OUTPUT ACCEPT [0:0]
+      COMMIT
+  - path: /etc/iptables/rules.v6
+    permissions: '0644'
+    content: |
+      *filter
+      :INPUT ACCEPT [0:0]
+      :FORWARD ACCEPT [0:0]
+      :OUTPUT ACCEPT [0:0]
+      COMMIT
+  # Script to fully open firewall - called by runcmd after boot
+  - path: /usr/local/bin/open-firewall.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      set -e
+      # Flush all rules and set ACCEPT policy
+      iptables -F INPUT
+      iptables -F FORWARD
+      iptables -F OUTPUT
+      iptables -X || true
+      iptables -P INPUT ACCEPT
+      iptables -P FORWARD ACCEPT
+      iptables -P OUTPUT ACCEPT
+      # Overwrite saved rules
+      iptables-save > /etc/iptables/rules.v4 2>/dev/null || true
+      echo "Firewall opened at $(date)" >> /var/log/open-firewall.log
+
+bootcmd:
+  # Run as early as possible - before most services start
+  - [ sh, -c, "iptables -F || true" ]
+  - [ sh, -c, "iptables -P INPUT ACCEPT || true" ]
+  - [ sh, -c, "iptables -P FORWARD ACCEPT || true" ]
+  - [ sh, -c, "iptables -P OUTPUT ACCEPT || true" ]
+  # Also write open rules directly in bootcmd (belt+suspenders with write_files)
+  - [ sh, -c, "mkdir -p /etc/iptables && printf '*filter\\n:INPUT ACCEPT [0:0]\\n:FORWARD ACCEPT [0:0]\\n:OUTPUT ACCEPT [0:0]\\nCOMMIT\\n' > /etc/iptables/rules.v4" ]
+
+runcmd:
+  # After full boot: mask the netfilter-persistent service to prevent rule reload on next boot
+  - systemctl mask netfilter-persistent || true
+  - systemctl mask iptables || true
+  # Run the open-firewall script
+  - bash /usr/local/bin/open-firewall.sh
+  # Verify
+  - iptables -L INPUT -n >> /var/log/open-firewall.log 2>&1 || true
+  - echo "cloud-init runcmd done at $(date)" >> /var/log/cloud-init-spotsync.log

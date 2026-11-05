@@ -1,6 +1,6 @@
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
-}
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 import express, { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
@@ -23,6 +23,25 @@ import userRoutes from './routes/users';
 import campgroundRoutes from './routes/campgrounds';
 import reviewRoutes from './routes/reviews';
 
+const requiredProductionEnv = [
+  'DB_URL',
+  'SECRET',
+  'CLOUDINARY_CLOUD_NAME',
+  'CLOUDINARY_KEY',
+  'CLOUDINARY_SECRET',
+  'MAPTILER_API_KEY',
+  'GEMINI_API_KEY',
+  'UPSTASH_REDIS_REST_URL',
+  'UPSTASH_REDIS_REST_TOKEN',
+];
+
+if (process.env.NODE_ENV === 'production') {
+  const missing = requiredProductionEnv.filter((name) => !process.env[name]);
+  if (missing.length > 0) {
+    throw new Error(`Missing required production environment variables: ${missing.join(', ')}`);
+  }
+}
+
 // ─── Database Connection ────────────────────────────────────────────────────
 const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/spotsync';
 mongoose.connect(dbUrl).catch((err) => console.error('Mongo connection error:', err));
@@ -35,6 +54,12 @@ db.once('open', () => {
 
 // ─── App Setup ──────────────────────────────────────────────────────────────
 const app = express();
+
+// Express receives requests from Nginx in production. Trusting the local
+// reverse proxy is required for secure session and CSRF cookies to work.
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
 
 // Use ejs-mate for layouts
 app.engine('ejs', ejsMate);
@@ -130,6 +155,14 @@ app.use(
   })
 );
 
+app.get('/healthz', (_req: Request, res: Response) => {
+  const databaseReady = mongoose.connection.readyState === 1;
+  res.status(databaseReady ? 200 : 503).json({
+    status: databaseReady ? 'ok' : 'degraded',
+    database: databaseReady ? 'connected' : 'disconnected',
+  });
+});
+
 // ─── Passport Authentication ─────────────────────────────────────────────────
 app.use(passport.initialize());
 app.use(passport.session());
@@ -181,6 +214,10 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   // CSRF token invalid/expired
   if (err.code === 'EBADCSRFTOKEN' || err.message === 'invalid csrf token') {
     req.flash('error', 'Form session expired or invalid. Please try again.');
+    return res.redirect('back');
+  }
+  if (err.message === 'Only JPG, PNG, or WebP images are allowed.') {
+    req.flash('error', err.message);
     return res.redirect('back');
   }
   if (err instanceof multer.MulterError) {

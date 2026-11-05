@@ -3,6 +3,7 @@ import { campgroundSchema, reviewSchema } from './schemas';
 import Campground from './models/campground';
 import ExpressError from './utils/ExpressError';
 import Review from './models/review';
+import { destroyImages } from './utils/cloudinaryCleanup';
 
 // Middleware: ensure user is authenticated
 export const isLoggedIn = (req: Request, res: Response, next: NextFunction): void => {
@@ -24,11 +25,15 @@ export const storeReturnTo = (req: Request, res: Response, next: NextFunction): 
 };
 
 // Middleware: validate campground data with Joi schema
-export const validateCampground = (req: Request, res: Response, next: NextFunction): void => {
+export const validateCampground = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const { error } = campgroundSchema.validate(req.body);
   if (error) {
     const msg = error.details.map((el: { message: string }) => el.message).join(',');
-    throw new ExpressError(msg, 400);
+    const uploadedImages = ((req.files as any[]) || []).map((file) => ({
+      filename: file.filename as string,
+    }));
+    await destroyImages(uploadedImages);
+    next(new ExpressError(msg, 400));
   } else {
     next();
   }

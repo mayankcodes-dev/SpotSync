@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import express, { Request, Response, NextFunction } from 'express';
+import cookieParser from 'cookie-parser';
 import multer from 'multer';
 import { doubleCsrf } from 'csrf-csrf';
 import path from 'path';
@@ -170,6 +171,9 @@ passport.use(new LocalStrategy((User as any).authenticate()));
 passport.serializeUser((User as any).serializeUser());
 passport.deserializeUser((User as any).deserializeUser());
 
+// ─── Cookie Parser (required before CSRF middleware) ─────────────────────────
+app.use(cookieParser());
+
 // ─── CSRF Protection ─────────────────────────────────────────────────────────
 const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
   getSecret: () => process.env.SECRET || 'spotsync-csrf-secret-changeme',
@@ -242,6 +246,10 @@ app.use((err: ExpressError, req: Request, res: Response, next: NextFunction) => 
   const { statusCode = 500 } = err;
   if (!err.message) {
     err.message = 'Oh No, Something Went Wrong!';
+  }
+  // Ensure res.locals always has currentUser so navbar never throws
+  if (res.locals.currentUser === undefined) {
+    res.locals.currentUser = req.user || null;
   }
   res.status(statusCode).render('error', { err });
 });

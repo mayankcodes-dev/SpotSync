@@ -116,7 +116,7 @@ export const createCampground = async (
       await destroyImages(uploadedImages);
       req.flash(
         'error',
-        `Image rejected: ${unsafeReason} Please upload a relevant camping or nature photo.`,
+        `Upload rejected: ${unsafeReason}`,
       );
       res.redirect('/spots/new');
       return;
@@ -217,7 +217,7 @@ export const updateCampground = async (
       await destroyImages(newImages);
       req.flash(
         'error',
-        `Image rejected: ${unsafeReason} Please upload a relevant camping or nature photo.`,
+        `Upload rejected: ${unsafeReason}`,
       );
       res.redirect(`/spots/${id}/edit`);
       return;

@@ -41,7 +41,7 @@ Return only the requested JSON object.`;
 
 function failedModeration(reason: string, error?: unknown): ModerationResult {
   if (error) {
-    console.error('Gemini moderation failed:', error instanceof Error ? error.message : error);
+    console.error('Gemini moderation failed:', error instanceof Error ? error.message : JSON.stringify(error));
   }
   // Moderation is a gate: an unavailable or invalid result must never allow an upload.
   return { isSafe: false, reason };
@@ -49,9 +49,9 @@ function failedModeration(reason: string, error?: unknown): ModerationResult {
 
 function unavailableModeration(reason: string, error?: unknown): ModerationResult {
   if (error) {
-    console.warn('Gemini moderation temporarily unavailable:', error instanceof Error ? error.message : String(error).substring(0, 200));
+    console.warn('Gemini moderation temporarily unavailable:', error instanceof Error ? error.message : JSON.stringify(error).substring(0, 300));
   }
-  // Service is overloaded or unreachable — fail open so users aren't blocked
+  // Service is overloaded or rate-limited — fail open so users aren't blocked
   // by transient infrastructure issues. The image is allowed through.
   return { isSafe: true, reason, serviceUnavailable: true };
 }
@@ -139,20 +139,30 @@ export async function moderateImage(imageUrl: string): Promise<ModerationResult>
 
     return { isSafe: result.isSafe, reason };
   } catch (err) {
-    // Distinguish transient service issues (503, timeout, network) from hard failures.
+    // Distinguish transient / quota issues from hard failures.
     // On transient errors, fail open so users are not blocked by Gemini downtime.
     const msg = err instanceof Error ? err.message : String(err);
+    const rawErr = err instanceof Error ? err : String(err);
+
+    // 429 quota exhausted and 503 overloaded are both transient infrastructure issues.
     const isTransient =
       msg.includes('503') ||
       msg.includes('UNAVAILABLE') ||
+      msg.includes('429') ||
+      msg.includes('RESOURCE_EXHAUSTED') ||
+      msg.includes('quota') ||
       msg.includes('abort') ||
       msg.includes('timeout') ||
       msg.includes('ECONNRESET') ||
-      msg.includes('high demand');
+      msg.includes('high demand') ||
+      msg.includes('rate limit');
+
     if (isTransient) {
-      return unavailableModeration('Moderation service temporarily unavailable — upload allowed.', err);
+      return unavailableModeration('Moderation service temporarily unavailable — upload allowed.', rawErr);
     }
-    return failedModeration('Image moderation is temporarily unavailable. Please try again later.', err);
+    // Hard failure (bad API key, network unreachable, unexpected parse error, etc.)
+    // Block the upload to be safe, but show a neutral message.
+    return failedModeration('Image could not be verified at this time. Please try again.', rawErr);
   } finally {
     clearTimeout(timeout);
   }

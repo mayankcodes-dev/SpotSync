@@ -15,7 +15,7 @@ import {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Run Gemini moderation in small batches and fail closed on every error. */
+/** Run Gemini moderation in small batches. ALWAYS fail-closed — any failure blocks the upload. */
 async function checkModeration(
   images: { url: string; filename: string }[],
 ): Promise<string | null> {
@@ -28,14 +28,12 @@ async function checkModeration(
 
     for (const result of results) {
       if (result.status === 'rejected') {
-        // Promise rejection shouldn't happen (moderateImage catches internally), but be safe
-        return 'Image moderation is temporarily unavailable. Please try again later.';
+        // moderateImage catches everything internally — this branch should never fire.
+        // Still fail-closed: block the upload.
+        console.error('[Moderation] Unexpected rejection in checkModeration');
+        return 'Image moderation failed unexpectedly. Please try again.';
       }
-      // Transient service unavailability: log and allow through
-      if (result.value.serviceUnavailable) {
-        console.warn('[Moderation] Service unavailable — image allowed through:', result.value.reason);
-        continue;
-      }
+      // isSafe: false → block upload (covers both content rejection AND all error paths)
       if (!result.value.isSafe) {
         return result.value.reason || 'Image failed content moderation.';
       }

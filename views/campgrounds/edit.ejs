@@ -7,8 +7,7 @@
         <h2 class="h4 fw-bold mb-0">Edit Spot</h2>
       </div>
       <div class="card-body p-4">
-        <form action="/spots/<%= campground._id %>?_method=PUT" method="POST" novalidate class="form-validate" enctype="multipart/form-data">
-          <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+        <form action="/spots/<%= campground._id %>?_method=PUT&_csrf=<%= encodeURIComponent(csrfToken()) %>" method="POST" novalidate class="form-validate" enctype="multipart/form-data">
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label" for="title">Title</label>

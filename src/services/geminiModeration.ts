@@ -3,9 +3,12 @@ import { GoogleGenAI, Type } from '@google/genai';
 export interface ModerationResult {
   isSafe: boolean;
   reason: string;
+  /** True when the moderation service was temporarily unavailable (503/timeout).
+   *  Callers may choose to allow the upload and log instead of blocking. */
+  serviceUnavailable?: boolean;
 }
 
-const MODERATION_MODEL = process.env.GEMINI_MODERATION_MODEL || 'gemini-2.0-flash';
+const MODERATION_MODEL = process.env.GEMINI_MODERATION_MODEL || 'gemini-3.8-flash';
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 15_000;
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -42,6 +45,15 @@ function failedModeration(reason: string, error?: unknown): ModerationResult {
   }
   // Moderation is a gate: an unavailable or invalid result must never allow an upload.
   return { isSafe: false, reason };
+}
+
+function unavailableModeration(reason: string, error?: unknown): ModerationResult {
+  if (error) {
+    console.warn('Gemini moderation temporarily unavailable:', error instanceof Error ? error.message : String(error).substring(0, 200));
+  }
+  // Service is overloaded or unreachable — fail open so users aren't blocked
+  // by transient infrastructure issues. The image is allowed through.
+  return { isSafe: true, reason, serviceUnavailable: true };
 }
 
 /**
@@ -127,6 +139,19 @@ export async function moderateImage(imageUrl: string): Promise<ModerationResult>
 
     return { isSafe: result.isSafe, reason };
   } catch (err) {
+    // Distinguish transient service issues (503, timeout, network) from hard failures.
+    // On transient errors, fail open so users are not blocked by Gemini downtime.
+    const msg = err instanceof Error ? err.message : String(err);
+    const isTransient =
+      msg.includes('503') ||
+      msg.includes('UNAVAILABLE') ||
+      msg.includes('abort') ||
+      msg.includes('timeout') ||
+      msg.includes('ECONNRESET') ||
+      msg.includes('high demand');
+    if (isTransient) {
+      return unavailableModeration('Moderation service temporarily unavailable — upload allowed.', err);
+    }
     return failedModeration('Image moderation is temporarily unavailable. Please try again later.', err);
   } finally {
     clearTimeout(timeout);

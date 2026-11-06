@@ -1,0 +1,1 @@
+﻿require("dotenv").config(); const m = require("mongoose"); m.connect(process.env.DB_URL).then(async () => { const C = require("./dist/models/campground").default; const s = await C.findOne({}); if(s && s.images && s.images.length) console.log("FULL URL:", s.images[0].url, "\nFILENAME:", s.images[0].filename); m.disconnect(); });

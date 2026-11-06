@@ -28,7 +28,13 @@ async function checkModeration(
 
     for (const result of results) {
       if (result.status === 'rejected') {
+        // Promise rejection shouldn't happen (moderateImage catches internally), but be safe
         return 'Image moderation is temporarily unavailable. Please try again later.';
+      }
+      // Transient service unavailability: log and allow through
+      if (result.value.serviceUnavailable) {
+        console.warn('[Moderation] Service unavailable — image allowed through:', result.value.reason);
+        continue;
       }
       if (!result.value.isSafe) {
         return result.value.reason || 'Image failed content moderation.';

@@ -17,7 +17,7 @@
     <div class="col">
         <div class="card h-100 border-0 shadow-sm bg-white rounded-4 overflow-hidden">
             <% if(campground.images.length) { %>
-                <img crossorigin="anonymous" src="<%= campground.images[0].url %>" alt="Spot image" class="card-img-top object-fit-cover" style="height: 240px;" onerror="this.onerror=null;this.src='/images/placeholder.svg'">
+                <img src="<%= campground.images[0].url %>" alt="Spot image" class="card-img-top object-fit-cover" style="height: 240px;" onerror="this.onerror=null;this.src='/images/placeholder.svg'">
             <% }else{ %>
                 <img src="/images/placeholder.svg" alt="No image available" class="card-img-top object-fit-cover" style="height: 240px;">
             <% } %>

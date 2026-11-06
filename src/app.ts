@@ -217,9 +217,15 @@ const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
   },
   size: 64,
   ignoredMethods: ['GET', 'HEAD', 'OPTIONS'],
-  // Read token from body._csrf (form submissions) OR x-csrf-token header (AJAX)
+  // Read token from:
+  //  1. body._csrf — standard URL-encoded form submissions
+  //  2. query._csrf — multipart/form-data forms (body not yet parsed by multer at this point)
+  //  3. x-csrf-token header — AJAX / fetch requests
   getCsrfTokenFromRequest: (req: Request) =>
-    (req.body?._csrf as string) || (req.headers['x-csrf-token'] as string) || '',
+    (req.body?._csrf as string) ||
+    (req.query?._csrf as string) ||
+    (req.headers['x-csrf-token'] as string) ||
+    '',
 });
 app.use(doubleCsrfProtection);
 

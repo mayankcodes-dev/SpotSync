@@ -165,6 +165,8 @@ app.use(
       ],
       objectSrc: ["'none'"],
       workerSrc: ["'self'", 'blob:'],
+      // child-src blob: required for MapTiler SDK WebGL workers (spawned as blob: URLs)
+      childSrc: ["'self'", 'blob:'],
       frameSrc: ["'none'"],
       manifestSrc: ["'self'"],
       baseUri: ["'self'"],
@@ -192,6 +194,9 @@ passport.deserializeUser((User as any).deserializeUser());
 app.use(cookieParser());
 
 // ─── CSRF Protection ─────────────────────────────────────────────────────────
+// csrf-csrf v4 reads the token from req.headers['x-csrf-token'] by default.
+// Our forms submit the token as req.body._csrf, so we override getCsrfTokenFromRequest
+// to check both the body field and the header (supports AJAX too).
 const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
   getSecret: () => process.env.SECRET || 'spotsync-csrf-secret-changeme',
   getSessionIdentifier: (req: Request) => (req.session as any)?.id || '',
@@ -209,6 +214,9 @@ const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
   },
   size: 64,
   ignoredMethods: ['GET', 'HEAD', 'OPTIONS'],
+  // Read token from body._csrf (form submissions) OR x-csrf-token header (AJAX)
+  getCsrfTokenFromRequest: (req: Request) =>
+    (req.body?._csrf as string) || (req.headers['x-csrf-token'] as string) || '',
 });
 app.use(doubleCsrfProtection);
 

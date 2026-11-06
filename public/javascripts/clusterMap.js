@@ -1,30 +1,25 @@
 "use strict";
 /**
- * clusterMap.ts — MapTiler cluster map for the spots index page.
- * Injected variables from EJS: maptilerApiKey (string), campgrounds (GeoJSON FeatureCollection)
- * Compiled to: public/javascripts/clusterMap.js
+ * clusterMap.js — MapTiler cluster map for the spots index page.
+ * Injected variables from EJS inline script before this file:
+ *   maptilerApiKey (string), campgrounds (GeoJSON FeatureCollection)
+ * Also reads from window.maptilerApiKey / window.campgrounds as fallback.
  */
-/**
- * clusterMap.ts — MapTiler cluster map for the spots index page.
- * Injected variables from EJS: maptilerApiKey (string), campgrounds (GeoJSON FeatureCollection)
- * Compiled to: public/javascripts/clusterMap.js
- */
-// @ts-ignore: maptilersdk is a global loaded from CDN script tag
-const _maptilersdk = window.maptilersdk;
-// @ts-ignore: injected by EJS inline script before this file loads
-const _maptilerApiKey = window.maptilerApiKey || '';
-// @ts-ignore: injected by EJS inline script before this file loads
-const _campgrounds = window.campgrounds;
+/* globals maptilersdk, maptilerApiKey, campgrounds */
+// Read from inline script const OR window.* assignment (whichever the EJS uses)
+var _maptilersdk = (typeof maptilersdk !== 'undefined' ? maptilersdk : window.maptilersdk);
+var _maptilerApiKey = (typeof maptilerApiKey !== 'undefined' ? maptilerApiKey : window.maptilerApiKey) || '';
+var _campgrounds = (typeof campgrounds !== 'undefined' ? campgrounds : window.campgrounds);
+
 if (typeof _maptilersdk === 'undefined' || !_maptilerApiKey) {
-    const el = document.getElementById('cluster-map');
+    var el = document.getElementById('cluster-map');
     if (el) {
         el.innerHTML =
             '<div class="d-flex align-items-center justify-content-center h-100 text-muted small p-4 text-center">Map unavailable. Add a valid MAPTILER_API_KEY in your environment to show the cluster map.</div>';
     }
-}
-else {
+} else {
     _maptilersdk.config.apiKey = _maptilerApiKey;
-    const map = new _maptilersdk.Map({
+    var map = new _maptilersdk.Map({
         container: 'cluster-map',
         style: _maptilersdk.MapStyle.OUTDOOR,
         center: [-103.59179687498357, 40.66995747013945],
@@ -33,10 +28,10 @@ else {
         bearing: -15,
     });
     map.addControl(new _maptilersdk.NavigationControl({ visualizePitch: true }), 'top-right');
-    map.on('load', () => {
+    map.on('load', function() {
         map.addSource('terrain', {
             type: 'raster-dem',
-            url: `https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=${_maptilerApiKey}`,
+            url: 'https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=' + _maptilerApiKey,
             tileSize: 256,
         });
         map.setTerrain({ source: 'terrain', exaggeration: 1.2 });
@@ -85,21 +80,22 @@ else {
                 'circle-opacity': 0.9,
             },
         });
-        map.on('click', 'clusters', async (e) => {
-            const features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
-            const clusterId = features[0].properties.cluster_id;
-            const zoom = await map.getSource('campgrounds').getClusterExpansionZoom(clusterId);
-            map.easeTo({ center: features[0].geometry.coordinates, zoom });
+        map.on('click', 'clusters', function(e) {
+            var features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
+            var clusterId = features[0].properties.cluster_id;
+            map.getSource('campgrounds').getClusterExpansionZoom(clusterId).then(function(zoom) {
+                map.easeTo({ center: features[0].geometry.coordinates, zoom: zoom });
+            });
         });
-        map.on('click', 'unclustered-point', (e) => {
-            const { popUpMarkup } = e.features[0].properties;
-            const coordinates = e.features[0].geometry.coordinates.slice();
+        map.on('click', 'unclustered-point', function(e) {
+            var popUpMarkup = e.features[0].properties.popUpMarkup;
+            var coordinates = e.features[0].geometry.coordinates.slice();
             while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
                 coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
             }
             new _maptilersdk.Popup().setLngLat(coordinates).setHTML(popUpMarkup).addTo(map);
         });
-        const setCursor = (cursor) => () => { map.getCanvas().style.cursor = cursor; };
+        function setCursor(cursor) { return function() { map.getCanvas().style.cursor = cursor; }; }
         map.on('mouseenter', 'clusters', setCursor('pointer'));
         map.on('mouseleave', 'clusters', setCursor(''));
         map.on('mouseenter', 'unclustered-point', setCursor('pointer'));

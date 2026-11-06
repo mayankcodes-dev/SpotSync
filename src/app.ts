@@ -111,6 +111,9 @@ app.use(flash());
 // ─── Security (Helmet CSP) ──────────────────────────────────────────────────
 app.use(
   helmet.contentSecurityPolicy({
+    // useDefaults: false prevents Helmet from auto-adding upgrade-insecure-requests
+    // which breaks Cloudflare Flexible SSL (CF→origin is HTTP, browser sees HTTPS)
+    useDefaults: false,
     directives: {
       defaultSrc: ["'self'"],
       connectSrc: [
@@ -119,6 +122,7 @@ app.use(
         'https://cdn.jsdelivr.net',
         'https://events.maptiler.com',
         'https://api.mapbox.com',
+        'https://*.maptiler.com',
       ],
       scriptSrc: [
         "'self'",
@@ -149,17 +153,22 @@ app.use(
         'https://cdn.maptiler.com',
         'https://api.maptiler.com',
         'https://t3.ftcdn.net',
-        '*.maptiler.com',
-        // MapTiler tile servers use various subdomains
         'https://*.maptiler.com',
       ],
-      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdn.maptiler.com', 'https://kit-free.fontawesome.com/', 'https://use.fontawesome.com/'],
+      fontSrc: [
+        "'self'",
+        'https://fonts.gstatic.com',
+        'https://cdn.maptiler.com',
+        'https://kit-free.fontawesome.com/',
+        'https://use.fontawesome.com/',
+        'https://fonts.googleapis.com',
+      ],
       objectSrc: ["'none'"],
       workerSrc: ["'self'", 'blob:'],
       frameSrc: ["'none'"],
       manifestSrc: ["'self'"],
-      // Do NOT include upgrade-insecure-requests — it breaks Cloudflare Flexible
-      // SSL where Cloudflare→origin is HTTP but browser sees HTTPS.
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
     },
   })
 );
@@ -189,9 +198,13 @@ const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
   cookieName: 'psifi.x-csrf-token',
   cookieOptions: {
     httpOnly: true,
-    // Must be secure:true when served via Cloudflare HTTPS.
-    // With trust proxy=1 and X-Forwarded-Proto, this is correct.
-    secure: true,
+    // secure: false — Cloudflare Flexible SSL: browser↔CF is HTTPS but
+    // CF↔origin is plain HTTP. The CSRF cookie is set on the HTTP response
+    // from origin; marking it Secure here would prevent it being re-sent by
+    // CF to origin over HTTP. Session security is still guaranteed by HTTPS
+    // at the Cloudflare edge. The double-submit pattern itself is the CSRF
+    // protection — cookie confidentiality isn't required for CSRF tokens.
+    secure: false,
     sameSite: 'lax',
   },
   size: 64,

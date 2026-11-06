@@ -3,42 +3,49 @@
  * Injected variables from EJS: maptilerApiKey (string), campgrounds (GeoJSON FeatureCollection)
  * Compiled to: public/javascripts/clusterMap.js
  */
-export {};
-declare const maptilersdk: any;
-declare const maptilerApiKey: string;
-declare const campgrounds: any;
+/**
+ * clusterMap.ts — MapTiler cluster map for the spots index page.
+ * Injected variables from EJS: maptilerApiKey (string), campgrounds (GeoJSON FeatureCollection)
+ * Compiled to: public/javascripts/clusterMap.js
+ */
+// @ts-ignore: maptilersdk is a global loaded from CDN script tag
+const _maptilersdk = (window as any).maptilersdk;
+// @ts-ignore: injected by EJS inline script before this file loads
+const _maptilerApiKey: string = (window as any).maptilerApiKey || '';
+// @ts-ignore: injected by EJS inline script before this file loads
+const _campgrounds = (window as any).campgrounds;
 
-if (typeof maptilersdk === 'undefined' || !maptilerApiKey) {
+if (typeof _maptilersdk === 'undefined' || !_maptilerApiKey) {
   const el = document.getElementById('cluster-map');
   if (el) {
     el.innerHTML =
       '<div class="d-flex align-items-center justify-content-center h-100 text-muted small p-4 text-center">Map unavailable. Add a valid MAPTILER_API_KEY in your environment to show the cluster map.</div>';
   }
 } else {
-  maptilersdk.config.apiKey = maptilerApiKey;
+  _maptilersdk.config.apiKey = _maptilerApiKey;
 
-  const map = new maptilersdk.Map({
+  const map = new _maptilersdk.Map({
     container: 'cluster-map',
-    style: maptilersdk.MapStyle.OUTDOOR,
+    style: _maptilersdk.MapStyle.OUTDOOR,
     center: [-103.59179687498357, 40.66995747013945],
     zoom: 3,
     pitch: 40,
     bearing: -15,
   });
 
-  map.addControl(new maptilersdk.NavigationControl({ visualizePitch: true }), 'top-right');
+  map.addControl(new _maptilersdk.NavigationControl({ visualizePitch: true }), 'top-right');
 
   map.on('load', () => {
     map.addSource('terrain', {
       type: 'raster-dem',
-      url: `https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=${maptilerApiKey}`,
+      url: `https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=${_maptilerApiKey}`,
       tileSize: 256,
     });
     map.setTerrain({ source: 'terrain', exaggeration: 1.2 });
 
     map.addSource('campgrounds', {
       type: 'geojson',
-      data: campgrounds,
+      data: _campgrounds,
       cluster: true,
       clusterMaxZoom: 14,
       clusterRadius: 50,
@@ -98,7 +105,7 @@ if (typeof maptilersdk === 'undefined' || !maptilerApiKey) {
       while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
         coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
       }
-      new maptilersdk.Popup().setLngLat(coordinates).setHTML(popUpMarkup).addTo(map);
+      new _maptilersdk.Popup().setLngLat(coordinates).setHTML(popUpMarkup).addTo(map);
     });
 
     const setCursor = (cursor: string) => () => { map.getCanvas().style.cursor = cursor; };

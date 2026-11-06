@@ -126,8 +126,8 @@
 </div>
 <% if (campground.geometry && campground.geometry.coordinates) { %>
   <script>
-    const maptilerApiKey = '<%= maptilerApiKey %>';
-    const campground = <%- JSON.stringify(campground) %>;
+    window.maptilerApiKey = '<%= maptilerApiKey %>';
+    window.campground = <%- JSON.stringify(campground) %>;
   </script>
   <script src="/javascripts/showPageMap.js"></script>
 <% } %>

@@ -1,6 +1,21 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-if (typeof maptilersdk === 'undefined' || !maptilerApiKey) {
+/**
+ * showPageMap.ts — MapTiler satellite map for the spot detail page.
+ * Injected variables from EJS: maptilerApiKey (string), campground (object)
+ * Compiled to: public/javascripts/showPageMap.js
+ */
+/**
+ * showPageMap.ts — MapTiler satellite map for the spot detail page.
+ * Injected variables from EJS: maptilerApiKey (string), campground (object)
+ * Compiled to: public/javascripts/showPageMap.js
+ */
+// @ts-ignore: maptilersdk is a global loaded from CDN script tag
+const _sdk = window.maptilersdk;
+// @ts-ignore: injected by EJS inline script before this file loads
+const _apiKey = window.maptilerApiKey || '';
+// @ts-ignore: injected by EJS inline script before this file loads
+const _campgroundData = window.campground;
+if (typeof _sdk === 'undefined' || !_apiKey) {
     const el = document.getElementById('map');
     if (el) {
         el.innerHTML =
@@ -8,11 +23,11 @@ if (typeof maptilersdk === 'undefined' || !maptilerApiKey) {
     }
 }
 else {
-    maptilersdk.config.apiKey = maptilerApiKey;
-    const parsedCampground = typeof campground === 'string' ? JSON.parse(campground) : campground;
-    const map = new maptilersdk.Map({
+    _sdk.config.apiKey = _apiKey;
+    const parsedCampground = typeof _campgroundData === 'string' ? JSON.parse(_campgroundData) : _campgroundData;
+    const map = new _sdk.Map({
         container: 'map',
-        style: maptilersdk.MapStyle.SATELLITE,
+        style: _sdk.MapStyle.SATELLITE,
         center: parsedCampground.geometry.coordinates,
         zoom: 12,
         pitch: 65,
@@ -23,17 +38,17 @@ else {
     map.on('load', () => {
         map.addSource('terrain', {
             type: 'raster-dem',
-            url: `https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=${maptilerApiKey}`,
+            url: `https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=${_apiKey}`,
             tileSize: 256,
         });
         map.setTerrain({ source: 'terrain', exaggeration: 1.5 });
     });
-    map.addControl(new maptilersdk.NavigationControl({ visualizePitch: true }), 'top-right');
-    if (maptilersdk.TerrainControl) {
-        map.addControl(new maptilersdk.TerrainControl({ source: 'terrain', exaggeration: 1.5 }), 'top-right');
+    map.addControl(new _sdk.NavigationControl({ visualizePitch: true }), 'top-right');
+    if (_sdk.TerrainControl) {
+        map.addControl(new _sdk.TerrainControl({ source: 'terrain', exaggeration: 1.5 }), 'top-right');
     }
-    new maptilersdk.Marker({ color: '#FF385C' })
+    new _sdk.Marker({ color: '#FF385C' })
         .setLngLat(parsedCampground.geometry.coordinates)
-        .setPopup(new maptilersdk.Popup({ offset: 25 }).setHTML(`<h3 class="h6 mb-1">${parsedCampground.title}</h3><p class="mb-0 small text-muted">${parsedCampground.location}</p>`))
+        .setPopup(new _sdk.Popup({ offset: 25 }).setHTML(`<h3 class="h6 mb-1">${parsedCampground.title}</h3><p class="mb-0 small text-muted">${parsedCampground.location}</p>`))
         .addTo(map);
 }

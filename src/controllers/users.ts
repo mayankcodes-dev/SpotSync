@@ -2,6 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import User from '../models/user';
 
 export const renderRegister = (req: Request, res: Response): void => {
+  // Prevent caching of pages that embed a CSRF token —
+  // a stale cached page has an old token that the server rejects.
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.set('Pragma', 'no-cache');
   res.render('users/register', { activePage: 'register' });
 };
 
@@ -26,6 +30,10 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 };
 
 export const renderLogin = (req: Request, res: Response): void => {
+  // Prevent caching of pages that embed a CSRF token —
+  // a stale cached page has an old token that the server rejects.
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.set('Pragma', 'no-cache');
   res.render('users/login', { activePage: 'login' });
 };
 

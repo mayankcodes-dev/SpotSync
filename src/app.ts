@@ -64,6 +64,9 @@ app.set('trust proxy', 1);
 // Use ejs-mate for layouts
 app.engine('ejs', ejsMate);
 app.set('view engine', 'ejs');
+// Disable Express auto-ETag — ETags let browsers cache HTML pages that embed
+// CSRF tokens; a cached login/register page carries a stale token → 403.
+app.set('etag', false);
 
 // Views and public are at project root, not in dist/
 const projectRoot = path.join(__dirname, '..');

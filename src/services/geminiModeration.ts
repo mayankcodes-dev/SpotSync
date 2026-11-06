@@ -10,7 +10,9 @@ export interface ModerationResult {
 
 const MODERATION_MODEL = process.env.GEMINI_MODERATION_MODEL || 'gemini-3.8-flash';
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
-const FETCH_TIMEOUT_MS = 15_000;
+const FETCH_TIMEOUT_MS = 8_000;   // 8s to download image from Cloudinary
+const GEMINI_TIMEOUT_MS = 18_000; // 18s for Gemini API call
+const TOTAL_TIMEOUT_MS = 25_000;  // 25s hard cap — Cloudflare cuts at 60s, stay well under
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 const moderationSchema = {
@@ -58,25 +60,43 @@ function unavailableModeration(reason: string, error?: unknown): ModerationResul
 
 /**
  * Download an uploaded Cloudinary image and classify it with Gemini Vision.
- * Every transport, API, or parsing failure is treated as unsafe so uploads
- * cannot bypass moderation when the service is unavailable.
+ * Hard-capped at TOTAL_TIMEOUT_MS so we never trigger a Cloudflare 504.
+ * Transient failures (quota, 503, timeout) → fail-open (image allowed).
+ * Hard failures (bad key, bad response) → fail-closed (image blocked).
  */
 export async function moderateImage(imageUrl: string): Promise<ModerationResult> {
+  // Race the whole operation against a hard deadline to prevent 504s.
+  const totalTimer: Promise<ModerationResult> = new Promise((resolve) =>
+    setTimeout(
+      () => resolve(unavailableModeration('[Moderation] Hard timeout — upload allowed through.')),
+      TOTAL_TIMEOUT_MS,
+    ),
+  );
+  return Promise.race([_moderateImage(imageUrl), totalTimer]);
+}
+
+async function _moderateImage(imageUrl: string): Promise<ModerationResult> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return failedModeration('Image moderation is not configured. Please try again later.');
   }
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  // ── 1. Download image with fetch timeout ───────────────────────────────────
+  const fetchController = new AbortController();
+  const fetchTimer = setTimeout(() => fetchController.abort(), FETCH_TIMEOUT_MS);
+
+  let imageBuffer: Buffer;
+  let mimeType: string;
 
   try {
-    const imageResponse = await fetch(imageUrl, { signal: controller.signal });
+    const imageResponse = await fetch(imageUrl, { signal: fetchController.signal });
+    clearTimeout(fetchTimer);
+
     if (!imageResponse.ok) {
       return failedModeration('Image could not be downloaded for moderation. Please try again.');
     }
 
-    const mimeType = (imageResponse.headers.get('content-type') || '').split(';', 1)[0].trim().toLowerCase();
+    mimeType = (imageResponse.headers.get('content-type') || '').split(';', 1)[0].trim().toLowerCase();
     if (!ALLOWED_MIME_TYPES.has(mimeType)) {
       return failedModeration('The uploaded image format cannot be moderated. Please use JPG, PNG, or WebP.');
     }
@@ -86,11 +106,24 @@ export async function moderateImage(imageUrl: string): Promise<ModerationResult>
       return failedModeration('The uploaded image is too large to moderate.');
     }
 
-    const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
+    imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
     if (imageBuffer.length === 0 || imageBuffer.length > MAX_IMAGE_BYTES) {
       return failedModeration('The uploaded image is empty or too large to moderate.');
     }
+  } catch (fetchErr) {
+    clearTimeout(fetchTimer);
+    const msg = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+    if (msg.includes('abort') || msg.includes('timeout')) {
+      return unavailableModeration('Image download timed out — upload allowed.', fetchErr);
+    }
+    return unavailableModeration('Image download failed — upload allowed.', fetchErr);
+  }
 
+  // ── 2. Gemini API call with its own timeout ────────────────────────────────
+  const geminiController = new AbortController();
+  const geminiTimer = setTimeout(() => geminiController.abort(), GEMINI_TIMEOUT_MS);
+
+  try {
     const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: MODERATION_MODEL,
@@ -113,8 +146,11 @@ export async function moderateImage(imageUrl: string): Promise<ModerationResult>
         responseSchema: moderationSchema,
         temperature: 0,
         maxOutputTokens: 128,
+        // Pass AbortSignal so the HTTP request is cancelled on timeout
+        ...(geminiController.signal ? { abortSignal: geminiController.signal } : {}),
       },
     });
+    clearTimeout(geminiTimer);
 
     const content = response.text?.trim();
     if (!content) {
@@ -139,12 +175,11 @@ export async function moderateImage(imageUrl: string): Promise<ModerationResult>
 
     return { isSafe: result.isSafe, reason };
   } catch (err) {
-    // Distinguish transient / quota issues from hard failures.
-    // On transient errors, fail open so users are not blocked by Gemini downtime.
+    clearTimeout(geminiTimer);
     const msg = err instanceof Error ? err.message : String(err);
     const rawErr = err instanceof Error ? err : String(err);
 
-    // 429 quota exhausted and 503 overloaded are both transient infrastructure issues.
+    // 429 quota / 503 overload / timeouts / network issues → transient, fail open
     const isTransient =
       msg.includes('503') ||
       msg.includes('UNAVAILABLE') ||
@@ -160,10 +195,7 @@ export async function moderateImage(imageUrl: string): Promise<ModerationResult>
     if (isTransient) {
       return unavailableModeration('Moderation service temporarily unavailable — upload allowed.', rawErr);
     }
-    // Hard failure (bad API key, network unreachable, unexpected parse error, etc.)
-    // Block the upload to be safe, but show a neutral message.
+    // Hard failure (bad API key, unexpected parse error, etc.) → block upload
     return failedModeration('Image could not be verified at this time. Please try again.', rawErr);
-  } finally {
-    clearTimeout(timeout);
   }
 }

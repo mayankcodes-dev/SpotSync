@@ -5,8 +5,8 @@ export interface ModerationResult {
   reason: string;
 }
 
-// gemini-2.0-flash: 1500 req/day free tier (vs gemini-3.8-flash's 20/day)
-const MODERATION_MODEL = process.env.GEMINI_MODERATION_MODEL || 'gemini-2.0-flash';
+// gemini-2.5-flash: 1500 req/day free tier (vs gemini-3.8-flash's 20/day), vision-capable
+const MODERATION_MODEL = process.env.GEMINI_MODERATION_MODEL || 'gemini-2.5-flash';
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 8_000;    // 8s to download image from Cloudinary
 const GEMINI_TIMEOUT_MS = 20_000;  // 20s for Gemini API call

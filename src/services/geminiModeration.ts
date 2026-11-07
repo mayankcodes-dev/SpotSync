@@ -5,7 +5,8 @@ export interface ModerationResult {
   reason: string;
 }
 
-const MODERATION_MODEL = process.env.GEMINI_MODERATION_MODEL || 'gemini-3.8-flash';
+// gemini-2.0-flash: 1500 req/day free tier (vs gemini-3.8-flash's 20/day)
+const MODERATION_MODEL = process.env.GEMINI_MODERATION_MODEL || 'gemini-2.0-flash';
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 8_000;    // 8s to download image from Cloudinary
 const GEMINI_TIMEOUT_MS = 20_000;  // 20s for Gemini API call
@@ -100,7 +101,7 @@ export async function moderateImage(imageUrl: string): Promise<ModerationResult>
   const hardDeadline: Promise<ModerationResult> = new Promise((resolve) =>
     setTimeout(
       () => resolve(failedModeration(
-        'Image moderation timed out. Please try again with a smaller image.',
+        'Image moderation is taking too long. Please try again in a moment.',
       )),
       TOTAL_TIMEOUT_MS,
     ),
@@ -161,7 +162,7 @@ async function _moderateImage(imageUrl: string): Promise<ModerationResult> {
         rawText = await callGemini(imageBuffer, mimeType, apiKey);
       } catch (retryErr) {
         return failedModeration(
-          'Image moderation is currently busy. Please wait a moment and try again.',
+          'Image moderation is currently rate-limited. Please wait a minute and try again.',
           retryErr,
         );
       }
@@ -195,37 +196,50 @@ async function _moderateImage(imageUrl: string): Promise<ModerationResult> {
   const direct = tryParse(rawText);
   if (direct) return direct;
 
-  // Second try: extract the first {...} JSON block from prose responses
-  // (Gemini sometimes wraps JSON in "Here is the analysis: {...}")
-  const match = rawText.match(/\{[\s\S]*?\}/);
+  // Second try: extract the LARGEST complete {...} JSON block from prose responses.
+  // Use greedy match so we capture the full object, not just the first fragment.
+  // e.g. Gemini says: "Here is the analysis: {\"isSafe\": true, \"reason\": \"...\"}"
+  const match = rawText.match(/\{[\s\S]*\}/);
   if (match) {
     const extracted = tryParse(match[0]);
     if (extracted) {
-      console.warn('[Moderation] Extracted JSON from prose response — consider stronger model/prompt.');
+      console.warn('[Moderation] Extracted JSON from prose response — model ignored JSON schema constraint.');
       return extracted;
     }
   }
 
-  // Third try: infer from common keyword patterns in plain-text responses
-  const lower = rawText.toLowerCase();
-  const isUnsafe =
-    lower.includes('nudity') ||
-    lower.includes('nude') ||
-    lower.includes('explicit') ||
-    lower.includes('sexual') ||
-    lower.includes('unsafe') ||
-    lower.includes('not safe') ||
-    lower.includes('not relevant') ||
-    lower.includes('violence') ||
-    lower.includes('hate');
-  const isSafe = !isUnsafe && (lower.includes('safe') || lower.includes('relevant') || lower.includes('camping'));
-  if (isSafe) {
-    console.warn('[Moderation] Keyword-inferred SAFE from prose response:', rawText.slice(0, 120));
-    return { isSafe: true, reason: 'Image appears safe (inferred from moderation response).' };
-  }
-  if (isUnsafe) {
-    console.warn('[Moderation] Keyword-inferred UNSAFE from prose response:', rawText.slice(0, 120));
-    return { isSafe: false, reason: 'Image appears unsafe (inferred from moderation response).' };
+  // Third try: keyword inference on plain-text responses.
+  // IMPORTANT: only run this on text that looks like actual prose, NOT on
+  // truncated/partial JSON fragments (e.g. '{"isSafe":' would falsely look "safe").
+  // Guard: skip keyword inference when the response starts with '{' (it's a broken JSON).
+  const trimmed = rawText.trim();
+  const looksLikeBrokenJson = trimmed.startsWith('{') || trimmed.startsWith('[');
+
+  if (!looksLikeBrokenJson) {
+    const lower = trimmed.toLowerCase();
+    const isUnsafe =
+      lower.includes('nudity') ||
+      lower.includes('nude') ||
+      lower.includes('explicit') ||
+      lower.includes('sexual') ||
+      lower.includes('unsafe') ||
+      lower.includes('not safe') ||
+      lower.includes('not appropriate') ||
+      lower.includes('not relevant') ||
+      lower.includes('violence') ||
+      lower.includes('hate');
+    const inferredSafe =
+      !isUnsafe &&
+      (lower.includes('safe') || lower.includes('relevant') || lower.includes('camping') || lower.includes('nature'));
+
+    if (inferredSafe) {
+      console.warn('[Moderation] Keyword-inferred SAFE from prose response:', trimmed.slice(0, 120));
+      return { isSafe: true, reason: 'Image appears safe (inferred from moderation response).' };
+    }
+    if (isUnsafe) {
+      console.warn('[Moderation] Keyword-inferred UNSAFE from prose response:', trimmed.slice(0, 120));
+      return { isSafe: false, reason: 'Image appears unsafe (inferred from moderation response).' };
+    }
   }
 
   // All parsing failed — fail-closed
